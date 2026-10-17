@@ -1,0 +1,14 @@
+{
+  "before": {
+    "source_root": "/tmp/terp-perf-before",
+    "snapshot": "/tmp/terp-qualification-5969b526d7493d2c/before",
+    "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+    "frozen_files_sha256": "d4321cffab26ca2a2129213c7662637ece88451ff0ee16ce555bcd445c4ebe69"
+  },
+  "current": {
+    "source_root": "/home/jacobt/src/terp",
+    "snapshot": "/tmp/terp-qualification-5969b526d7493d2c/current",
+    "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+    "frozen_files_sha256": "b6e5520938417ba4ad7379cbb304900b7cda6cdbd08f483b723ee3c0052e6a70"
+  }
+}

@@ -1,4 +1,4 @@
-import { type_workload } from "./type_workload.ts";
+import { type_workload, type TypeWorkload } from "./type_workload.ts";
 import {
   fingerprint,
   fingerprint_text,
@@ -6,12 +6,20 @@ import {
   revision,
 } from "./provenance.ts";
 
+const category = Deno.args[3] ?? "combined";
+if (!["combined", "valid", "invalid", "placeholders"].includes(category)) {
+  throw new Error("unknown type workload category: " + category);
+}
+const workload_category = category as TypeWorkload;
 const directory = await Deno.makeTempDir({ prefix: "terp-type-bench-" });
 try {
   const source_sha256 = await fingerprint(await implementation_files());
   const workload = directory + "/workload.ts";
   const module_url = new URL("../mod.ts", import.meta.url).href;
-  await Deno.writeTextFile(workload, type_workload(module_url));
+  await Deno.writeTextFile(
+    workload,
+    type_workload(module_url, workload_category),
+  );
   const samples_ms: number[] = [];
   const instantiations: number[] = [];
   let sample_count = 5;
@@ -66,10 +74,12 @@ try {
     revision: await revision(),
     source_sha256,
     workload_sha256: await fingerprint_text(
-      type_workload("terp:public-api") +
+      type_workload("terp:public-api", workload_category) +
         await Deno.readTextFile("bench/type_config.json"),
     ),
-    expressions: 24,
+    workload_category,
+    expressions: type_workload("terp:public-api", workload_category).split("\n")
+      .filter((line) => line.startsWith("const ")).length,
     samples_ms,
     median_ms,
     instantiations: instantiations[0],

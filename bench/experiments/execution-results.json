@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+    "dirty": true,
+    "runtime": [
+      "deno 2.9.7 (stable, release, x86_64-unknown-linux-gnu)",
+      "v8 15.0.245.2-rusty",
+      "typescript 6.0.3"
+    ],
+    "source_sha256": {
+      "src/execution.ts": "5e1dfe3f43c9532840ec66e2b1a1a458c99353521e69b1ffac9095947cfe797b",
+      "src/runtime.ts": "cda82e3f804550e5a314af23fa07b973f69d4156fab0663976522a36f2e3a636",
+      "src/operators.ts": "baf16d5ca1839cb5ab8214c0794e42320e4efe6ce164d131d8cb3b9ebd58a77e",
+      "src/errors.ts": "1ae5f52a01f091952d2bdd644b63fb649149e66a26fd70c7606b3a39274626be",
+      "src/interpreter.ts": "f3f185096004aa62dd06359ecfc22c35809171a6afc119473de5add57bdf65ed",
+      "core.ts": "1264684dc6edd56b81de2893dc3a5788d78013533617ee312b253f8e85023133",
+      "bench/experiments/execution.ts": "8b3eaa0d465c615d529770818fa34c5a9f386f269b2d1199c02017bce9f02a1c",
+      "bench/experiments/retained.ts": "05f22ad0eb4b5ebff17af1d2a760a558fcdbe0c72f9a201709c0e67f9f7e0849"
+    }
+  },
+  "timing": {
+    "ns": {
+      "lazy/double-closure": 120.97189000000071,
+      "lazy/single-closure": 49.703689999987546,
+      "tree/array-free": 53.52995999997802,
+      "closure/validated": 53.5917800000243,
+      "compact/no-validation": 50.58446000002733,
+      "constants/unfolded": 157.0259199999782,
+      "constants/folded": 69.98374999999214,
+      "bindings/duplicate": 124.41511999997601,
+      "bindings/unique": 142.40673000000243,
+      "direct/uncached-repeat": 2716.5871999999945,
+      "direct/last-repeat": 133.42515000000276,
+      "direct/uncached-unique": 2862.7975499999957,
+      "direct/last-unique": 2941.2616200000048,
+      "direct/uncached-cycle65": 2460.0779500000135,
+      "direct/last-cycle65": 2545.7370900000024,
+      "compile/uncached-repeat": 990.9887600000002,
+      "compile/cached-repeat": 10.467289999978675,
+      "compile/last-repeat": 6.763860000028217,
+      "compile/last-unique": 677.9921200000172,
+      "compile/uncached-cycle65": 546.8999099999928,
+      "compile/cached-cycle65": 904.4852099999844,
+      "compile/last-cycle65": 592.6236300000164,
+      "compile/uncached-unique": 788.175200000005,
+      "compile/cached-unique": 1328.169880000023
+    },
+    "sink": "object"
+  },
+  "retained_heap": {
+    "interpreters": 20,
+    "sourceCharacters": 891,
+    "emptyBytes": 3044504,
+    "populatedBytes": 5660560,
+    "replacedBytes": 3355728,
+    "perInterpreterPopulatedBytes": 130802.8,
+    "perInterpreterReplacedBytes": 15561.2,
+    "observable": true
+  },
+  "method": {
+    "timing": "median of five wall-time samples, 100000 calls after 10000 warmups per case; concurrent machine load; exploratory, not release qualification",
+    "heap": "20 interpreters; two forced full GCs before each heap measurement",
+    "commands": [
+      "deno run bench/experiments/execution.ts",
+      "deno run --v8-flags=--expose-gc bench/experiments/retained.ts"
+    ],
+    "source_note": "A post-measurement thunk type assertion was widened to unknown; emitted JavaScript is unchanged."
+  },
+  "decisions": {
+    "closure": "Retain: full library preserves validation, callbacks, hooks, lazy order, error attribution, and tracing; main runtime benchmark qualifies before/after behavior.",
+    "compact": "Reject: eager-only prototype lacks validation, application errors, lazy control flow, hooks, and traces. Its 50.6 ns versus validated closure 53.6 ns does not demonstrate an end-to-end win and varied from an earlier 86.5 ns.",
+    "fold": "Reject: numeric built-in whitelist prototype speeds a constant-heavy expression, but removes explain steps; arbitrary callbacks cannot be assumed pure or run during compilation.",
+    "source_cache": "Retain a single most recent successful direct-call source of at most 1024 characters. Raw/fragment/checked/explain APIs retain their explicit prepared-runner semantics without this cache. Repeated calls improve 20x; unique/cycling misses cost 2.7/3.5 percent in this sample. Reject 64-entry Map due to larger miss costs.",
+    "lazy_thunks": "Retain one memo closure per lazy operand; no extra read closure. Deferred reads remain memoized and reentrant; trace collection remains invocation-local."
+  }
+}

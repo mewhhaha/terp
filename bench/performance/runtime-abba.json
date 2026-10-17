@@ -1,0 +1,1338 @@
+{
+  "method": "interleaved before/current/current/before; two independent processes and ten samples per side; CPU and wall median ratios; full sample spread retained",
+  "order": [
+    "before",
+    "current",
+    "current",
+    "before"
+  ],
+  "sources": {
+    "before": {
+      "source_root": "/tmp/terp-perf-before",
+      "snapshot": "/tmp/terp-qualification-5969b526d7493d2c/before",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "frozen_files_sha256": "d4321cffab26ca2a2129213c7662637ece88451ff0ee16ce555bcd445c4ebe69"
+    },
+    "current": {
+      "source_root": "/home/jacobt/src/terp",
+      "snapshot": "/tmp/terp-qualification-5969b526d7493d2c/current",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "frozen_files_sha256": "b6e5520938417ba4ad7379cbb304900b7cda6cdbd08f483b723ee3c0052e6a70"
+    }
+  },
+  "version": {
+    "deno": "2.9.7",
+    "v8": "15.0.245.2-rusty",
+    "typescript": "6.0.3"
+  },
+  "target": "x86_64-unknown-linux-gnu",
+  "host": {
+    "hostname": "cachyos-x8664",
+    "os_release": "7.2.9-2-cachyos",
+    "cpu": "AMD Ryzen 7 3800X 8-Core Processor",
+    "logical_cpus": 16,
+    "cpu_affinity": "0-15",
+    "scheduling_policy": "0"
+  },
+  "workload_sha256": "ed227b3f32682c63ab40e10c0574d1688d4c613ad7f357ca442c16cf1c7efab4",
+  "comparisons": {
+    "construct/small": {
+      "before_cpu_ns": 11179.448994787788,
+      "current_cpu_ns": 13513.53602665556,
+      "cpu_ratio": 1.2087837274409496,
+      "before_wall_ns": 7434.905293482175,
+      "current_wall_ns": 9037.635926573426,
+      "wall_ratio": 1.2155683993037933,
+      "before_cpu_range_ns": [
+        6451.421430802874,
+        16910.453977509373
+      ],
+      "current_cpu_range_ns": [
+        9850.425768233987,
+        25290.04908522981
+      ]
+    },
+    "construct/large-100": {
+      "before_cpu_ns": 88478.44827586207,
+      "current_cpu_ns": 133671.93675889328,
+      "cpu_ratio": 1.5107852744221386,
+      "before_wall_ns": 87451.8577586205,
+      "current_wall_ns": 83951.04979253112,
+      "wall_ratio": 0.9599687410214646,
+      "before_cpu_range_ns": [
+        82150.1976284585,
+        112471.86147186147
+      ],
+      "current_cpu_range_ns": [
+        82008.29875518673,
+        255716.76300578035
+      ]
+    },
+    "raw/arithmetic": {
+      "before_cpu_ns": 1539.577131516678,
+      "current_cpu_ns": 2105.626761203527,
+      "cpu_ratio": 1.3676656518853452,
+      "before_wall_ns": 1509.720021051048,
+      "current_wall_ns": 1827.4638669211884,
+      "wall_ratio": 1.210465411758222,
+      "before_cpu_range_ns": [
+        1425.2889865966952,
+        3315.093299740178
+      ],
+      "current_cpu_range_ns": [
+        1697.7374798745868,
+        5499.858503914725
+      ]
+    },
+    "raw/invalid": {
+      "before_cpu_ns": 16354.660347551342,
+      "current_cpu_ns": 8109.956017592963,
+      "cpu_ratio": 0.4958804307303884,
+      "before_wall_ns": 16365.823949246605,
+      "current_wall_ns": 8145.653738504594,
+      "wall_ratio": 0.49772341214018595,
+      "before_cpu_range_ns": [
+        15293.901542983102,
+        16533.70340999207
+      ],
+      "current_cpu_range_ns": [
+        7936.425429828068,
+        8860.053144375554
+      ]
+    },
+    "raw/large-100": {
+      "before_cpu_ns": 2320.9975864843123,
+      "current_cpu_ns": 2558.774516087681,
+      "cpu_ratio": 1.102446004678332,
+      "before_wall_ns": 2302.292035398229,
+      "current_wall_ns": 2577.1556210742165,
+      "wall_ratio": 1.1193869333038127,
+      "before_cpu_range_ns": [
+        2254.2410965060108,
+        2604.1440790266233
+      ],
+      "current_cpu_range_ns": [
+        2537.526895329705,
+        2710.7052393014264
+      ]
+    },
+    "raw/nesting-24": {
+      "before_cpu_ns": 7203.498750446269,
+      "current_cpu_ns": 3956.0870417565184,
+      "cpu_ratio": 0.549189661692026,
+      "before_wall_ns": 7168.712602641915,
+      "current_wall_ns": 3931.1611448735594,
+      "wall_ratio": 0.5483775627195311,
+      "before_cpu_range_ns": [
+        6880.706431189604,
+        7392.002856122814
+      ],
+      "current_cpu_range_ns": [
+        3740.9738937233847,
+        4059.0080376396786
+      ]
+    },
+    "run/arithmetic-reused": {
+      "before_cpu_ns": 180.90089439625996,
+      "current_cpu_ns": 82.41687741358686,
+      "cpu_ratio": 0.4555913208093613,
+      "before_wall_ns": 180.5225223599064,
+      "current_wall_ns": 82.78647439373192,
+      "wall_ratio": 0.4585936054487492,
+      "before_cpu_range_ns": [
+        173.70412377382013,
+        237.37009698816615
+      ],
+      "current_cpu_range_ns": [
+        75.17330123282554,
+        84.6945563789984
+      ]
+    },
+    "run/arithmetic-direct": {
+      "before_cpu_ns": 1713.4988560291501,
+      "current_cpu_ns": 104.52201195166867,
+      "cpu_ratio": 0.06099917229818713,
+      "before_wall_ns": 1702.0265231759988,
+      "current_wall_ns": 104.93656381655889,
+      "wall_ratio": 0.061653894570776836,
+      "before_cpu_range_ns": [
+        1633.2005528005852,
+        2173.433324713387
+      ],
+      "current_cpu_range_ns": [
+        92.81265040817566,
+        106.8124969871613
+      ]
+    },
+    "run/arithmetic-raw": {
+      "before_cpu_ns": 194.15107307770495,
+      "current_cpu_ns": 80.3828947846116,
+      "cpu_ratio": 0.41402240796495626,
+      "before_wall_ns": 193.74002187781267,
+      "current_wall_ns": 80.68977938773884,
+      "wall_ratio": 0.41648482644761964,
+      "before_cpu_range_ns": [
+        186.15568374366904,
+        197.0088789687417
+      ],
+      "current_cpu_range_ns": [
+        77.73760632758842,
+        86.87190759379847
+      ]
+    },
+    "run/lazy-evaluate": {
+      "before_cpu_ns": 127.69688968820351,
+      "current_cpu_ns": 29.38187139420063,
+      "cpu_ratio": 0.23009073647715395,
+      "before_wall_ns": 127.58044272676956,
+      "current_wall_ns": 29.504728566560345,
+      "wall_ratio": 0.2312637261319796,
+      "before_cpu_range_ns": [
+        121.13659324504994,
+        128.93095926023642
+      ],
+      "current_cpu_range_ns": [
+        28.336849712832958,
+        29.581682613938572
+      ]
+    },
+    "run/lazy-skip": {
+      "before_cpu_ns": 107.86543562703605,
+      "current_cpu_ns": 28.68928605892833,
+      "cpu_ratio": 0.2659729309222525,
+      "before_wall_ns": 108.09026423412135,
+      "current_wall_ns": 28.808031386963442,
+      "wall_ratio": 0.26651828072661404,
+      "before_cpu_range_ns": [
+        107.03586797498406,
+        108.97810498031141
+      ],
+      "current_cpu_range_ns": [
+        28.11905161697246,
+        29.01930886176508
+      ]
+    },
+    "run/pricing-reused": {
+      "before_cpu_ns": 529.4055565816205,
+      "current_cpu_ns": 257.76152762884203,
+      "cpu_ratio": 0.4868885949992894,
+      "before_wall_ns": 528.7876573177476,
+      "current_wall_ns": 259.29100659317857,
+      "wall_ratio": 0.4903499599601491,
+      "before_cpu_range_ns": [
+        513.2605304212168,
+        533.5057731793819
+      ],
+      "current_cpu_range_ns": [
+        253.28776000304953,
+        281.9988434577792
+      ]
+    },
+    "run/pricing-direct": {
+      "before_cpu_ns": 4832.896929302547,
+      "current_cpu_ns": 288.406236904091,
+      "cpu_ratio": 0.05967564405428194,
+      "before_wall_ns": 4672.346896070715,
+      "current_wall_ns": 289.31868036589145,
+      "wall_ratio": 0.061921489735532825,
+      "before_cpu_range_ns": [
+        4461.230837591646,
+        6365.627231611521
+      ],
+      "current_cpu_range_ns": [
+        264.7460792140837,
+        291.59924782437577
+      ]
+    },
+    "run/rules-reused": {
+      "before_cpu_ns": 343.63046946021507,
+      "current_cpu_ns": 165.29323408104497,
+      "cpu_ratio": 0.4810203074852253,
+      "before_wall_ns": 343.0614054647447,
+      "current_wall_ns": 166.05564269176355,
+      "wall_ratio": 0.4840405829586346,
+      "before_cpu_range_ns": [
+        308.6084960170105,
+        346.89711250670405
+      ],
+      "current_cpu_range_ns": [
+        150.04401772748136,
+        167.64713265997773
+      ]
+    },
+    "run/rules-direct": {
+      "before_cpu_ns": 2896.729038708756,
+      "current_cpu_ns": 193.64860535334608,
+      "cpu_ratio": 0.06685078333721775,
+      "before_wall_ns": 2885.2393943722186,
+      "current_wall_ns": 194.24992961233244,
+      "wall_ratio": 0.06732541153819857,
+      "before_cpu_range_ns": [
+        2814.747951673379,
+        3741.3615644758124
+      ],
+      "current_cpu_range_ns": [
+        169.43076753586834,
+        196.86196388595772
+      ]
+    },
+    "run/arithmetic-checked": {
+      "before_cpu_ns": 182.87629438711852,
+      "current_cpu_ns": 84.52698377709294,
+      "cpu_ratio": 0.4622085331528178,
+      "before_wall_ns": 182.30557098751487,
+      "current_wall_ns": 84.80758029851481,
+      "wall_ratio": 0.4651946719956398,
+      "before_cpu_range_ns": [
+        179.70375264506566,
+        184.28139447247727
+      ],
+      "current_cpu_range_ns": [
+        82.19436762749632,
+        86.04614105882403
+      ]
+    },
+    "run/arithmetic-explain": {
+      "before_cpu_ns": 1777.2763472259091,
+      "current_cpu_ns": 2573.6444045635176,
+      "cpu_ratio": 1.448083416279428,
+      "before_wall_ns": 1770.6594106716118,
+      "current_wall_ns": 2330.852575281977,
+      "wall_ratio": 1.3163754481715282,
+      "before_cpu_range_ns": [
+        1755.064776975915,
+        2453.732128760635
+      ],
+      "current_cpu_range_ns": [
+        2210.5263157894738,
+        3489.8344628374625
+      ]
+    },
+    "run/fragment-typed": {
+      "before_cpu_ns": 102.92855637946361,
+      "current_cpu_ns": 55.895553979383294,
+      "cpu_ratio": 0.5430519570615062,
+      "before_wall_ns": 102.77939990030904,
+      "current_wall_ns": 56.079682983788594,
+      "wall_ratio": 0.5456315471600645,
+      "before_cpu_range_ns": [
+        100.7432123456666,
+        105.10170371419133
+      ],
+      "current_cpu_range_ns": [
+        44.467177870945115,
+        56.59197115207712
+      ]
+    },
+    "run/composed-independent": {
+      "before_cpu_ns": 273.7907699894522,
+      "current_cpu_ns": 136.1707345317811,
+      "cpu_ratio": 0.4973532692027094,
+      "before_wall_ns": 274.0882864618283,
+      "current_wall_ns": 136.5897297629384,
+      "wall_ratio": 0.498342090886693,
+      "before_cpu_range_ns": [
+        268.92256479778797,
+        279.5497970739599
+      ],
+      "current_cpu_range_ns": [
+        132.30834566459413,
+        144.64336253002517
+      ]
+    },
+    "run/composed-template": {
+      "before_cpu_ns": 271.73779948572127,
+      "current_cpu_ns": 127.01002543004824,
+      "cpu_ratio": 0.46739918285355114,
+      "before_wall_ns": 272.23807839349126,
+      "current_wall_ns": 127.47243803417349,
+      "wall_ratio": 0.4682388253193795,
+      "before_cpu_range_ns": [
+        268.55821830351744,
+        274.8446991088277
+      ],
+      "current_cpu_range_ns": [
+        126.05865870551104,
+        134.71925341029393
+      ]
+    },
+    "complete/operator-prefix": {
+      "before_cpu_ns": 479325.5813953488,
+      "current_cpu_ns": 84093.28358208956,
+      "cpu_ratio": 0.1754408419790331,
+      "before_wall_ns": 479337.3023255806,
+      "current_wall_ns": 77879.49056603639,
+      "wall_ratio": 0.1624732525263353,
+      "before_cpu_range_ns": [
+        458933.3333333333,
+        584000
+      ],
+      "current_cpu_range_ns": [
+        76886.7924528302,
+        148247.89915966385
+      ]
+    },
+    "scale/operators/construct/0": {
+      "before_cpu_ns": 4563.962735741877,
+      "current_cpu_ns": 6239.655651207998,
+      "cpu_ratio": 1.3671574490175444,
+      "before_wall_ns": 4487.226394134608,
+      "current_wall_ns": 5026.580525972615,
+      "wall_ratio": 1.1201976643173193,
+      "before_cpu_range_ns": [
+        4303.977877047437,
+        5577.823221995001
+      ],
+      "current_cpu_range_ns": [
+        4328.4407572856835,
+        7331.991951710262
+      ]
+    },
+    "scale/values/construct/0": {
+      "before_cpu_ns": 4553.654743390358,
+      "current_cpu_ns": 8069.391355483681,
+      "cpu_ratio": 1.7720692081885268,
+      "before_wall_ns": 4502.756942901564,
+      "current_wall_ns": 5050.1607098226295,
+      "wall_ratio": 1.1215708007033398,
+      "before_cpu_range_ns": [
+        4403.173223212345,
+        5389.04585959574
+      ],
+      "current_cpu_range_ns": [
+        4474.339035769829,
+        27359.642199421203
+      ]
+    },
+    "scale/vocabulary/parse/0": {
+      "before_cpu_ns": 237.43794504804444,
+      "current_cpu_ns": 1053.0498394821325,
+      "cpu_ratio": 4.435052869367838,
+      "before_wall_ns": 237.38062419188154,
+      "current_wall_ns": 1037.6500699445457,
+      "wall_ratio": 4.371250069280228,
+      "before_cpu_range_ns": [
+        234.6928021920118,
+        244.92384239216594
+      ],
+      "current_cpu_range_ns": [
+        944.7893464764703,
+        1590.1409274311443
+      ]
+    },
+    "scale/operators/parse/0": {
+      "before_cpu_ns": 245.7845447552533,
+      "current_cpu_ns": 1006.5148224837129,
+      "cpu_ratio": 4.095110306817614,
+      "before_wall_ns": 244.29723690797726,
+      "current_wall_ns": 1010.0946416847655,
+      "wall_ratio": 4.13469531816789,
+      "before_cpu_range_ns": [
+        228.40104445787392,
+        252.2330121480886
+      ],
+      "current_cpu_range_ns": [
+        938.2188629641801,
+        1059.7851965504472
+      ]
+    },
+    "scale/values/parse/0": {
+      "before_cpu_ns": 241.0882363520821,
+      "current_cpu_ns": 992.288940848714,
+      "cpu_ratio": 4.11587456884287,
+      "before_wall_ns": 239.78664926168682,
+      "current_wall_ns": 997.3315257947547,
+      "wall_ratio": 4.1592454328278095,
+      "before_cpu_range_ns": [
+        231.89327291013976,
+        242.18721796368274
+      ],
+      "current_cpu_range_ns": [
+        936.4048408952852,
+        1040.935367949586
+      ]
+    },
+    "scale/vocabulary/run/0": {
+      "before_cpu_ns": 27.633359644236045,
+      "current_cpu_ns": 17.40742454817975,
+      "cpu_ratio": 0.6299423874726253,
+      "before_wall_ns": 27.669497277443554,
+      "current_wall_ns": 17.46106376162056,
+      "wall_ratio": 0.6310582222198519,
+      "before_cpu_range_ns": [
+        25.832868092139776,
+        27.86238612754831
+      ],
+      "current_cpu_range_ns": [
+        17.17090181693503,
+        18.490111696995367
+      ]
+    },
+    "scale/completion/0/empty": {
+      "before_cpu_ns": 60.38177328789988,
+      "current_cpu_ns": 200.1179988200118,
+      "cpu_ratio": 3.3142120200056158,
+      "before_wall_ns": 60.159993503779496,
+      "current_wall_ns": 200.1562084379152,
+      "wall_ratio": 3.327064994203176,
+      "before_cpu_range_ns": [
+        59.46633234637716,
+        62.220650680363896
+      ],
+      "current_cpu_range_ns": [
+        195.59495503957888,
+        505.99097198245545
+      ]
+    },
+    "scale/completion/0/v": {
+      "before_cpu_ns": 103.64379565053788,
+      "current_cpu_ns": 252.4336813929117,
+      "cpu_ratio": 2.435588930417579,
+      "before_wall_ns": 103.13610754583684,
+      "current_wall_ns": 252.80012878625257,
+      "wall_ratio": 2.4511311780299687,
+      "before_cpu_range_ns": [
+        94.4324967882504,
+        106.05332248641054
+      ],
+      "current_cpu_range_ns": [
+        233.90369703278324,
+        587.022348266643
+      ]
+    },
+    "scale/completion/0/value9": {
+      "before_cpu_ns": 139.88047503155488,
+      "current_cpu_ns": 278.489839751189,
+      "cpu_ratio": 1.9909128825046238,
+      "before_wall_ns": 139.50321824812792,
+      "current_wall_ns": 279.23784884450475,
+      "wall_ratio": 2.0016588316108757,
+      "before_cpu_range_ns": [
+        120.61336174977875,
+        140.62401247182254
+      ],
+      "current_cpu_range_ns": [
+        259.5929740498171,
+        284.2837195526156
+      ]
+    },
+    "scale/completion/0/missing": {
+      "before_cpu_ns": 143.60670288687984,
+      "current_cpu_ns": 284.26338174421414,
+      "cpu_ratio": 1.9794576160426904,
+      "before_wall_ns": 143.1866486281418,
+      "current_wall_ns": 284.8461615055319,
+      "wall_ratio": 1.989334649805809,
+      "before_cpu_range_ns": [
+        124.66630574794183,
+        146.1578268379968
+      ],
+      "current_cpu_range_ns": [
+        268.5562778428285,
+        289.3426800772122
+      ]
+    },
+    "scale/completion/0/1_operator9": {
+      "before_cpu_ns": 181.5200949266764,
+      "current_cpu_ns": 404.0201615351916,
+      "cpu_ratio": 2.225759972736861,
+      "before_wall_ns": 181.200442024979,
+      "current_wall_ns": 405.1060909698211,
+      "wall_ratio": 2.2356793749651893,
+      "before_cpu_range_ns": [
+        167.17487740286214,
+        186.95072739303455
+      ],
+      "current_cpu_range_ns": [
+        386.35616332372683,
+        416.7621507885252
+      ]
+    },
+    "scale/operators/construct/10": {
+      "before_cpu_ns": 10186.647173489278,
+      "current_cpu_ns": 16769.271948608137,
+      "cpu_ratio": 1.6462013126605701,
+      "before_wall_ns": 10162.931773879083,
+      "current_wall_ns": 10707.309421841674,
+      "wall_ratio": 1.0535650204168208,
+      "before_cpu_range_ns": [
+        9415.265788278055,
+        10290.37037037037
+      ],
+      "current_cpu_range_ns": [
+        8650.978758850479,
+        72735.89164785553
+      ]
+    },
+    "scale/values/construct/10": {
+      "before_cpu_ns": 5289.397526966588,
+      "current_cpu_ns": 8401.749453295844,
+      "cpu_ratio": 1.58841331370194,
+      "before_wall_ns": 5287.157327019213,
+      "current_wall_ns": 5999.724198765282,
+      "wall_ratio": 1.134773154584337,
+      "before_cpu_range_ns": [
+        4920.507193367472,
+        9498.676859747133
+      ],
+      "current_cpu_range_ns": [
+        5013.496625843539,
+        14186.929023190443
+      ]
+    },
+    "scale/vocabulary/parse/10": {
+      "before_cpu_ns": 1259.4212861696144,
+      "current_cpu_ns": 1731.919662098095,
+      "cpu_ratio": 1.3751710258650067,
+      "before_wall_ns": 1240.372384420709,
+      "current_wall_ns": 1733.0611154211313,
+      "wall_ratio": 1.3972103355320367,
+      "before_cpu_range_ns": [
+        1176.401388153638,
+        1370.2911766555562
+      ],
+      "current_cpu_range_ns": [
+        1684.9844550878076,
+        2902.3508137432186
+      ]
+    },
+    "scale/operators/parse/10": {
+      "before_cpu_ns": 1096.0720402187724,
+      "current_cpu_ns": 1595.8257281168162,
+      "cpu_ratio": 1.4559496726130288,
+      "before_wall_ns": 1096.5516638435183,
+      "current_wall_ns": 1572.8941488946211,
+      "wall_ratio": 1.4344004033348297,
+      "before_cpu_range_ns": [
+        1023.4681903984491,
+        1167.117838793437
+      ],
+      "current_cpu_range_ns": [
+        1485.635400343258,
+        2244.8979591836733
+      ]
+    },
+    "scale/values/parse/10": {
+      "before_cpu_ns": 281.64871640453214,
+      "current_cpu_ns": 1048.4267839380136,
+      "cpu_ratio": 3.722462496268429,
+      "before_wall_ns": 280.3838741754281,
+      "current_wall_ns": 1048.5087168211257,
+      "wall_ratio": 3.7395471472981505,
+      "before_cpu_range_ns": [
+        273.49353150913237,
+        287.26732475250355
+      ],
+      "current_cpu_range_ns": [
+        981.8728141470864,
+        1470.4005106111376
+      ]
+    },
+    "scale/vocabulary/run/10": {
+      "before_cpu_ns": 101.80426128997819,
+      "current_cpu_ns": 44.84797468382921,
+      "cpu_ratio": 0.4405314091527535,
+      "before_wall_ns": 101.6797220146324,
+      "current_wall_ns": 45.021433667716224,
+      "wall_ratio": 0.4427769153542467,
+      "before_cpu_range_ns": [
+        99.39960634801017,
+        103.78184568991871
+      ],
+      "current_cpu_range_ns": [
+        43.998578055689876,
+        47.77712827248431
+      ]
+    },
+    "scale/completion/10/empty": {
+      "before_cpu_ns": 284972.602739726,
+      "current_cpu_ns": 746.4246632202559,
+      "cpu_ratio": 0.002619285699902835,
+      "before_wall_ns": 279076.1643835713,
+      "current_wall_ns": 755.3520621863174,
+      "wall_ratio": 0.0027066161807646786,
+      "before_cpu_range_ns": [
+        268750,
+        362242.85714285716
+      ],
+      "current_cpu_range_ns": [
+        731.9145818834475,
+        2417.605918733021
+      ]
+    },
+    "scale/completion/10/v": {
+      "before_cpu_ns": 3540.9577267146115,
+      "current_cpu_ns": 577.1879772917207,
+      "cpu_ratio": 0.16300335158964183,
+      "before_wall_ns": 3529.9400105244304,
+      "current_wall_ns": 577.284343390686,
+      "wall_ratio": 0.1635394204064451,
+      "before_cpu_range_ns": [
+        3376.103982669555,
+        4052.874447221688
+      ],
+      "current_cpu_range_ns": [
+        563.1108982845553,
+        1726.8516514436606
+      ]
+    },
+    "scale/completion/10/value9": {
+      "before_cpu_ns": 818.9869801232603,
+      "current_cpu_ns": 384.9925962962251,
+      "cpu_ratio": 0.47008390321209065,
+      "before_wall_ns": 819.3729235541604,
+      "current_wall_ns": 377.58315880832043,
+      "wall_ratio": 0.4608196682537341,
+      "before_cpu_range_ns": [
+        795.5239871433673,
+        834.4652306153911
+      ],
+      "current_cpu_range_ns": [
+        369.3820484805837,
+        582.3897468856921
+      ]
+    },
+    "scale/completion/10/missing": {
+      "before_cpu_ns": 293.60273309775516,
+      "current_cpu_ns": 322.00769713853236,
+      "cpu_ratio": 1.0967462521247027,
+      "before_wall_ns": 293.3711675781859,
+      "current_wall_ns": 322.50921885316217,
+      "wall_ratio": 1.0993214551910957,
+      "before_cpu_range_ns": [
+        288.7981414409604,
+        304.06832722906944
+      ],
+      "current_cpu_range_ns": [
+        314.7742149177458,
+        325.434439178515
+      ]
+    },
+    "scale/completion/10/1_operator9": {
+      "before_cpu_ns": 15128.914785142024,
+      "current_cpu_ns": 542.3972250074523,
+      "cpu_ratio": 0.0358516941043343,
+      "before_wall_ns": 15156.796795338943,
+      "current_wall_ns": 542.7806021517084,
+      "wall_ratio": 0.03581103642681452,
+      "before_cpu_range_ns": [
+        14284.327323162275,
+        15292.9889298893
+      ],
+      "current_cpu_range_ns": [
+        517.2476163406631,
+        1448.2122430906609
+      ]
+    },
+    "scale/operators/construct/100": {
+      "before_cpu_ns": 78411.9850187266,
+      "current_cpu_ns": 95751.51515151515,
+      "cpu_ratio": 1.2211336714489178,
+      "before_wall_ns": 78121.62546816352,
+      "current_wall_ns": 61262.528497409316,
+      "wall_ratio": 0.7841942372586103,
+      "before_cpu_range_ns": [
+        72420.49469964665,
+        80003.92156862745
+      ],
+      "current_cpu_range_ns": [
+        54419.61852861036,
+        98476.92307692308
+      ]
+    },
+    "scale/values/construct/100": {
+      "before_cpu_ns": 27556.29139072848,
+      "current_cpu_ns": 28536.25170998632,
+      "cpu_ratio": 1.0355621264618924,
+      "before_wall_ns": 27529.912582781584,
+      "current_wall_ns": 27874.387140903007,
+      "wall_ratio": 1.0125127370850016,
+      "before_cpu_range_ns": [
+        27014.454664914585,
+        27867.924528301886
+      ],
+      "current_cpu_range_ns": [
+        26412.06675224647,
+        33943.42105263158
+      ]
+    },
+    "scale/vocabulary/parse/100": {
+      "before_cpu_ns": 3449.4052749525945,
+      "current_cpu_ns": 4119.771475209141,
+      "cpu_ratio": 1.1943425451118552,
+      "before_wall_ns": 3453.730218927766,
+      "current_wall_ns": 4132.872270965141,
+      "wall_ratio": 1.1966401568702199,
+      "before_cpu_range_ns": [
+        3339.7767038826864,
+        4635.537377868666
+      ],
+      "current_cpu_range_ns": [
+        4059.3881223755247,
+        4377.837950426994
+      ]
+    },
+    "scale/operators/parse/100": {
+      "before_cpu_ns": 3286.0186854614,
+      "current_cpu_ns": 3918.0552832777885,
+      "cpu_ratio": 1.1923411454148936,
+      "before_wall_ns": 3291.5977708573128,
+      "current_wall_ns": 3928.9866692806127,
+      "wall_ratio": 1.1936411866803789,
+      "before_cpu_range_ns": [
+        3177.7495635613395,
+        4043.7912417516495
+      ],
+      "current_cpu_range_ns": [
+        3827.956989247312,
+        4101.979604079184
+      ]
+    },
+    "scale/values/parse/100": {
+      "before_cpu_ns": 307.84473356784076,
+      "current_cpu_ns": 1050.3696611882347,
+      "cpu_ratio": 3.4120111428080064,
+      "before_wall_ns": 307.4864441406438,
+      "current_wall_ns": 1060.0942807259105,
+      "wall_ratio": 3.4476130604347066,
+      "before_cpu_range_ns": [
+        302.09197448002294,
+        308.8995540192281
+      ],
+      "current_cpu_range_ns": [
+        971.3606135624484,
+        1102.5357715043367
+      ]
+    },
+    "scale/vocabulary/run/100": {
+      "before_cpu_ns": 105.09934227475145,
+      "current_cpu_ns": 45.78562563517863,
+      "cpu_ratio": 0.4356414097767189,
+      "before_wall_ns": 105.1808455265744,
+      "current_wall_ns": 45.88329460129845,
+      "wall_ratio": 0.4362324182848087,
+      "before_cpu_range_ns": [
+        100.96267794917827,
+        108.08049686217912
+      ],
+      "current_cpu_range_ns": [
+        44.418609312674135,
+        46.74445724595175
+      ]
+    },
+    "scale/completion/100/empty": {
+      "before_cpu_ns": 3361833.3333333335,
+      "current_cpu_ns": 9660.47619047619,
+      "cpu_ratio": 0.0028735738011430837,
+      "before_wall_ns": 3364910.333333379,
+      "current_wall_ns": 9690.016666666756,
+      "wall_ratio": 0.002879725076378942,
+      "before_cpu_range_ns": [
+        3297000,
+        3528000
+      ],
+      "current_cpu_range_ns": [
+        9307.587460245342,
+        9811.809889582333
+      ]
+    },
+    "scale/completion/100/v": {
+      "before_cpu_ns": 38584.58646616541,
+      "current_cpu_ns": 7672.343576453165,
+      "cpu_ratio": 0.19884477920168966,
+      "before_wall_ns": 38536.533834585636,
+      "current_wall_ns": 7658.205849685371,
+      "wall_ratio": 0.19872586057058172,
+      "before_cpu_range_ns": [
+        37791.59049360146,
+        39692.01520912548
+      ],
+      "current_cpu_range_ns": [
+        7421.325435024065,
+        8387.927720107651
+      ]
+    },
+    "scale/completion/100/value9": {
+      "before_cpu_ns": 7297.750803284542,
+      "current_cpu_ns": 850.9850644653419,
+      "cpu_ratio": 0.1166092248699879,
+      "before_wall_ns": 7294.631917172451,
+      "current_wall_ns": 851.2119058763496,
+      "wall_ratio": 0.11669017923611653,
+      "before_cpu_range_ns": [
+        6964.495001723543,
+        7417.350946090682
+      ],
+      "current_cpu_range_ns": [
+        836.1574829505041,
+        859.2764259044676
+      ]
+    },
+    "scale/completion/100/missing": {
+      "before_cpu_ns": 1884.3098775815345,
+      "current_cpu_ns": 331.5419044608243,
+      "cpu_ratio": 0.17594871650641147,
+      "before_wall_ns": 1884.5049995327488,
+      "current_wall_ns": 333.0439260577906,
+      "wall_ratio": 0.17672753648324985,
+      "before_cpu_range_ns": [
+        1841.115493991377,
+        2008.099190080992
+      ],
+      "current_cpu_range_ns": [
+        326.546951847192,
+        350.9604400625648
+      ]
+    },
+    "scale/completion/100/1_operator9": {
+      "before_cpu_ns": 206164.94845360826,
+      "current_cpu_ns": 1257.9711967800768,
+      "cpu_ratio": 0.006101770481431515,
+      "before_wall_ns": 207383.22680411788,
+      "current_wall_ns": 1256.1559277544993,
+      "wall_ratio": 0.006057172255984767,
+      "before_cpu_range_ns": [
+        197638.09523809524,
+        209907.21649484537
+      ],
+      "current_cpu_range_ns": [
+        1208.18023010662,
+        2020.2502987233506
+      ]
+    },
+    "scale/operators/construct/1000": {
+      "before_cpu_ns": 793230.7692307692,
+      "current_cpu_ns": 904029.4117647059,
+      "cpu_ratio": 1.139680212659152,
+      "before_wall_ns": 774564.8461538552,
+      "current_wall_ns": 582228.2857142844,
+      "wall_ratio": 0.7516843665257613,
+      "before_cpu_range_ns": [
+        724928.5714285715,
+        838720
+      ],
+      "current_cpu_range_ns": [
+        505125,
+        951705.8823529412
+      ]
+    },
+    "scale/values/construct/1000": {
+      "before_cpu_ns": 343862.0689655172,
+      "current_cpu_ns": 330460.31746031746,
+      "cpu_ratio": 0.9610257928549144,
+      "before_wall_ns": 348201.62068965525,
+      "current_wall_ns": 329864.1475409762,
+      "wall_ratio": 0.9473366232116913,
+      "before_cpu_range_ns": [
+        333129.03225806454,
+        652064.5161290322
+      ],
+      "current_cpu_range_ns": [
+        317703.125,
+        345966.10169491527
+      ]
+    },
+    "scale/vocabulary/parse/1000": {
+      "before_cpu_ns": 24901.234567901236,
+      "current_cpu_ns": 29141.456582633054,
+      "cpu_ratio": 1.1702815980135237,
+      "before_wall_ns": 25001.33130328805,
+      "current_wall_ns": 29226.795518207433,
+      "wall_ratio": 1.1690095684770063,
+      "before_cpu_range_ns": [
+        24271.105826397146,
+        25443.890274314213
+      ],
+      "current_cpu_range_ns": [
+        27956.462585034013,
+        29514.409221902017
+      ]
+    },
+    "scale/operators/parse/1000": {
+      "before_cpu_ns": 24611.177170035673,
+      "current_cpu_ns": 28510.48951048951,
+      "cpu_ratio": 1.1584366450053956,
+      "before_wall_ns": 24684.00118906087,
+      "current_wall_ns": 28596.309090909446,
+      "wall_ratio": 1.1584956941090403,
+      "before_cpu_range_ns": [
+        24116.251482799526,
+        25641.697877652932
+      ],
+      "current_cpu_range_ns": [
+        27803.54706684857,
+        28942.65734265734
+      ]
+    },
+    "scale/values/parse/1000": {
+      "before_cpu_ns": 321.68564113299306,
+      "current_cpu_ns": 1077.2539110800494,
+      "cpu_ratio": 3.348778351703566,
+      "before_wall_ns": 322.5114893480083,
+      "current_wall_ns": 1080.894199236596,
+      "wall_ratio": 3.351490520296626,
+      "before_cpu_range_ns": [
+        306.9738194199476,
+        324.7512215710784
+      ],
+      "current_cpu_range_ns": [
+        985.7642480665977,
+        1105.5190320976742
+      ]
+    },
+    "scale/vocabulary/run/1000": {
+      "before_cpu_ns": 105.21798200114797,
+      "current_cpu_ns": 45.05409879381483,
+      "cpu_ratio": 0.42819770857535805,
+      "before_wall_ns": 105.31936114080399,
+      "current_wall_ns": 45.175076388717336,
+      "wall_ratio": 0.42893420449371783,
+      "before_cpu_range_ns": [
+        101.56102969974721,
+        106.28134956728954
+      ],
+      "current_cpu_range_ns": [
+        44.13707049320687,
+        46.49476097303877
+      ]
+    },
+    "scale/completion/1000/empty": {
+      "before_cpu_ns": 84443000,
+      "current_cpu_ns": 101519.80198019803,
+      "cpu_ratio": 0.001202228745783523,
+      "before_wall_ns": 84722534.99999988,
+      "current_wall_ns": 101610.79207920813,
+      "wall_ratio": 0.0011993360689597906,
+      "before_cpu_range_ns": [
+        81325000,
+        90556000
+      ],
+      "current_cpu_range_ns": [
+        99577.1144278607,
+        104497.48743718593
+      ]
+    },
+    "scale/completion/1000/v": {
+      "before_cpu_ns": 495658.53658536583,
+      "current_cpu_ns": 80458.49802371541,
+      "cpu_ratio": 0.16232646486430136,
+      "before_wall_ns": 495263.7317073157,
+      "current_wall_ns": 81551.83794466217,
+      "wall_ratio": 0.16466345650534445,
+      "before_cpu_range_ns": [
+        485186.0465116279,
+        504850
+      ],
+      "current_cpu_range_ns": [
+        78713.2075471698,
+        82837.5
+      ]
+    },
+    "scale/completion/1000/value9": {
+      "before_cpu_ns": 72000,
+      "current_cpu_ns": 10158.410985777342,
+      "cpu_ratio": 0.14108904146912976,
+      "before_wall_ns": 72105.36933797962,
+      "current_wall_ns": 10118.173617846836,
+      "wall_ratio": 0.14032482893777168,
+      "before_cpu_range_ns": [
+        71217.99307958478,
+        77549.24242424243
+      ],
+      "current_cpu_range_ns": [
+        9823.359073359074,
+        11016.22418879056
+      ]
+    },
+    "scale/completion/1000/missing": {
+      "before_cpu_ns": 15383.480825958703,
+      "current_cpu_ns": 343.1601529385305,
+      "cpu_ratio": 0.02230705500405788,
+      "before_wall_ns": 15438.58064516087,
+      "current_wall_ns": 344.0602051511233,
+      "wall_ratio": 0.022285740707580323,
+      "before_cpu_range_ns": [
+        15251.289609432572,
+        15577.129700690713
+      ],
+      "current_cpu_range_ns": [
+        332.70661053892616,
+        349.1722172689289
+      ]
+    },
+    "scale/completion/1000/1_operator9": {
+      "before_cpu_ns": 7246000,
+      "current_cpu_ns": 13326.28205128205,
+      "cpu_ratio": 0.0018391225574499103,
+      "before_wall_ns": 7271483.66666673,
+      "current_wall_ns": 13444.18533333313,
+      "wall_ratio": 0.0018488916360993469,
+      "before_cpu_range_ns": [
+        7018666.666666667,
+        7398000
+      ],
+      "current_cpu_range_ns": [
+        13106.649937264743,
+        14020.350877192983
+      ]
+    },
+    "scale/source/flat/4": {
+      "before_cpu_ns": 2150.6289646274595,
+      "current_cpu_ns": 1894.3910103799637,
+      "cpu_ratio": 0.8808544112155198,
+      "before_wall_ns": 2148.718540580706,
+      "current_wall_ns": 1918.4944291019597,
+      "wall_ratio": 0.8928551566290639,
+      "before_cpu_range_ns": [
+        2077.105453046078,
+        2366.0471687860017
+      ],
+      "current_cpu_range_ns": [
+        1779.3946969020624,
+        1972.694933179502
+      ]
+    },
+    "scale/source/nested/4": {
+      "before_cpu_ns": 1255.4840322479845,
+      "current_cpu_ns": 1364.906513252517,
+      "cpu_ratio": 1.0871556134478333,
+      "before_wall_ns": 1255.4747203300064,
+      "current_wall_ns": 1364.3275967620832,
+      "wall_ratio": 1.086702563316818,
+      "before_cpu_range_ns": [
+        1227.96147475615,
+        1288.0584577911673
+      ],
+      "current_cpu_range_ns": [
+        1286.0460615444165,
+        2874.212013622201
+      ]
+    },
+    "scale/source/flat/32": {
+      "before_cpu_ns": 21436.853002070395,
+      "current_cpu_ns": 10358.239508700102,
+      "cpu_ratio": 0.4831977673075284,
+      "before_wall_ns": 21481.33714880365,
+      "current_wall_ns": 10394.17603182412,
+      "wall_ratio": 0.48387006636609664,
+      "before_cpu_range_ns": [
+        21192.946058091286,
+        21643.226473629784
+      ],
+      "current_cpu_range_ns": [
+        10158.483228001945,
+        10504.550050556118
+      ]
+    },
+    "scale/source/nested/32": {
+      "before_cpu_ns": 7640.873750462792,
+      "current_cpu_ns": 3816.2610828145635,
+      "cpu_ratio": 0.4994534928133606,
+      "before_wall_ns": 7643.227323213335,
+      "current_wall_ns": 3827.436710054503,
+      "wall_ratio": 0.5007618572890211,
+      "before_cpu_range_ns": [
+        7420.214735283228,
+        7733.564013840831
+      ],
+      "current_cpu_range_ns": [
+        3551.833011752324,
+        3871.3708902134204
+      ]
+    },
+    "scale/source/flat/96": {
+      "before_cpu_ns": 65414.556962025315,
+      "current_cpu_ns": 29703.862660944207,
+      "cpu_ratio": 0.45408643030614726,
+      "before_wall_ns": 65504.33860759112,
+      "current_wall_ns": 29718.443490701808,
+      "wall_ratio": 0.4536866430898948,
+      "before_cpu_range_ns": [
+        63775.3164556962,
+        66756.57894736843
+      ],
+      "current_cpu_range_ns": [
+        29077.14285714286,
+        30849.84984984985
+      ]
+    },
+    "scale/source/nested/96": {
+      "before_cpu_ns": 22338.32976445396,
+      "current_cpu_ns": 9201.726487960019,
+      "cpu_ratio": 0.41192544764928385,
+      "before_wall_ns": 22362.577753778143,
+      "current_wall_ns": 9210.394820536258,
+      "wall_ratio": 0.4118664190661189,
+      "before_cpu_range_ns": [
+        22050.053248136315,
+        23130.285714285714
+      ],
+      "current_cpu_range_ns": [
+        9059.518400726942,
+        9353.47569286688
+      ]
+    },
+    "scale/arguments/1": {
+      "before_cpu_ns": 52.18899637148283,
+      "current_cpu_ns": 40.22820155918877,
+      "cpu_ratio": 0.7708176887105326,
+      "before_wall_ns": 52.24733477708113,
+      "current_wall_ns": 40.407178975394764,
+      "wall_ratio": 0.7733825877969918,
+      "before_cpu_range_ns": [
+        49.17721877532321,
+        53.30738572507815
+      ],
+      "current_cpu_range_ns": [
+        33.891191348867714,
+        40.72948699921133
+      ]
+    },
+    "scale/arguments/4": {
+      "before_cpu_ns": 306.96917098047646,
+      "current_cpu_ns": 151.95619226053114,
+      "cpu_ratio": 0.4950210204339891,
+      "before_wall_ns": 307.29730726102326,
+      "current_wall_ns": 152.43088780741283,
+      "wall_ratio": 0.4960371737912288,
+      "before_cpu_range_ns": [
+        284.4403925870002,
+        309.8866684237454
+      ],
+      "current_cpu_range_ns": [
+        129.21497592368164,
+        154.6195462883414
+      ]
+    },
+    "scale/arguments/16": {
+      "before_cpu_ns": 1239.3062156656997,
+      "current_cpu_ns": 586.3757661065658,
+      "cpu_ratio": 0.47314841053354284,
+      "before_wall_ns": 1241.8077279179508,
+      "current_wall_ns": 587.974487551685,
+      "wall_ratio": 0.4734827093865,
+      "before_cpu_range_ns": [
+        1223.7668434851532,
+        1256.8391925036162
+      ],
+      "current_cpu_range_ns": [
+        547.1356949124681,
+        603.335246669285
+      ]
+    },
+    "scale/invalid/empty": {
+      "before_cpu_ns": 11032.87380699894,
+      "current_cpu_ns": 5727.506426735218,
+      "cpu_ratio": 0.5191309650529903,
+      "before_wall_ns": 11069.947507953952,
+      "current_wall_ns": 5715.080304310661,
+      "wall_ratio": 0.5162698648936027,
+      "before_cpu_range_ns": [
+        10500.25367833587,
+        11138.502673796791
+      ],
+      "current_cpu_range_ns": [
+        5538.7392391002495,
+        5951.156812339332
+      ]
+    },
+    "scale/invalid/trailing": {
+      "before_cpu_ns": 11341.689373297002,
+      "current_cpu_ns": 6053.923053620115,
+      "cpu_ratio": 0.5337761293192826,
+      "before_wall_ns": 11294.81321061201,
+      "current_wall_ns": 6073.640109057583,
+      "wall_ratio": 0.5377371007208079,
+      "before_cpu_range_ns": [
+        10917.281348788198,
+        12568.017767906718
+      ],
+      "current_cpu_range_ns": [
+        5921.199647162599,
+        6166.616176916086
+      ]
+    },
+    "scale/invalid/group": {
+      "before_cpu_ns": 15201.465201465202,
+      "current_cpu_ns": 7725.105728565936,
+      "cpu_ratio": 0.5081816539514459,
+      "before_wall_ns": 15253.027106227019,
+      "current_wall_ns": 7754.041522491055,
+      "wall_ratio": 0.5083608301807503,
+      "before_cpu_range_ns": [
+        14676.366217175302,
+        15407.239819004524
+      ],
+      "current_cpu_range_ns": [
+        7552.017771195853,
+        7896.962706651288
+      ]
+    },
+    "scale/invalid/unknown": {
+      "before_cpu_ns": 15314.814814814816,
+      "current_cpu_ns": 6436.11371446423,
+      "cpu_ratio": 0.4202540998561891,
+      "before_wall_ns": 15397.746666665762,
+      "current_wall_ns": 6453.6555949691465,
+      "wall_ratio": 0.4191298723559676,
+      "before_cpu_range_ns": [
+        14804.285714285714,
+        15562.918838421445
+      ],
+      "current_cpu_range_ns": [
+        6350.827866291784,
+        6543.05062882941
+      ]
+    },
+    "scale/invalid/quote": {
+      "before_cpu_ns": 11679.192372406058,
+      "current_cpu_ns": 6314.901593252109,
+      "cpu_ratio": 0.5406967701098977,
+      "before_wall_ns": 11718.351654515693,
+      "current_wall_ns": 6268.8875351454635,
+      "wall_ratio": 0.534963254215855,
+      "before_cpu_range_ns": [
+        11307.692307692309,
+        11883.236994219653
+      ],
+      "current_cpu_range_ns": [
+        6177.8249015449865,
+        6682.286785379569
+      ]
+    },
+    "scale/invalid/depth": {
+      "before_cpu_ns": 41037.69841269841,
+      "current_cpu_ns": 27178.335535006605,
+      "cpu_ratio": 0.662277286159809,
+      "before_wall_ns": 41182.42063492246,
+      "current_wall_ns": 27283.20211360779,
+      "wall_ratio": 0.6624963198610959,
+      "before_cpu_range_ns": [
+        39108.365019011406,
+        41659.31863727455
+      ],
+      "current_cpu_range_ns": [
+        26665.809768637533,
+        27889.487870619945
+      ]
+    },
+    "run/fragment-explain": {
+      "before_available": false,
+      "current_cpu_ns": 103.71760937280618,
+      "current_cpu_range_ns": [
+        88.97955911109527,
+        109.72986947266517
+      ]
+    }
+  },
+  "scheduling": {
+    "requested": "SCHED_OTHER",
+    "observed_before_normalization": {
+      "SCHED_OTHER": 26608,
+      "SCHED_IDLE": 61
+    },
+    "normalizations": 61,
+    "poll_ms": 50,
+    "scope": "only this benchmark process and its own descendants/threads"
+  }
+}

@@ -86,25 +86,42 @@ type Token = readonly [
   text: string,
   spaced: boolean,
 ];
+// A shallow tail avoids recursively comparing every remaining token at each step.
+type TokenStream = readonly [] | readonly [Token, unknown];
+type ReverseTokens<T extends TokenStream, A extends TokenStream = []> =
+  T extends readonly [infer F extends Token, infer R extends TokenStream]
+    ? ReverseTokens<R, readonly [F, A]>
+    : A;
+type AppendTokens<T extends TokenStream, R extends TokenStream> = T extends
+  readonly [infer F extends Token, infer Rest extends TokenStream]
+  ? readonly [F, AppendTokens<Rest, R>]
+  : R;
 type Definition<E, A extends 1 | 2> = E extends readonly unknown[]
   ? Extract<E[number], { arity: A }>
   : Extract<E, { arity: A }>;
 type Def<O, K extends string, A extends 1 | 2> = K extends keyof O
   ? Definition<O[K], A>
   : never;
-type Candidates<O, S extends string, K = keyof O & string> = K extends string
-  ? S extends `${K}${infer R}`
+type Candidates<
+  O,
+  S extends string,
+  Keys extends keyof O & string = keyof O & string,
+> = {
+  [K in Keys]: S extends `${K}${infer R}`
     ? Identifier<K> extends true ? R extends `${IdentPart}${string}` ? never : K
     : K
-  : never
+    : never;
+}[Keys];
+// Candidates are prefixes of one source, so discard empty suffixes together.
+type Longest<U extends string> = [U] extends [`${infer C}${infer R}`]
+  ? `${C}${LongestTail<R>}`
   : never;
-type Longer<K extends string, U extends string> = U extends `${K}${infer R}`
-  ? R extends "" ? never : U
+type LongestTail<U extends string> = Exclude<U, ""> extends
+  infer R extends string ? [R] extends [never] ? "" : Longest<R>
   : never;
-type Longest<U extends string, All extends string = U> = U extends U
-  ? [Longer<U, All>] extends [never] ? U : never
+type Match<O, S extends string> = S extends `${infer C}${string}`
+  ? Longest<Candidates<O, S, Extract<keyof O & string, `${C}${string}`>>>
   : never;
-type Match<O, S extends string> = Longest<Candidates<O, S>>;
 type ReadString<S extends string, Q extends string> = S extends
   `${infer C}${infer R}` ? C extends Q ? readonly [R]
   : C extends "\\"
@@ -127,16 +144,21 @@ type ReadWord<O, S extends string, A extends string = ""> = S extends ""
       : ReadWordStep<O, S, A, C, R>
     : ReadWordStep<O, S, A, C, R>
   : readonly [A, S];
+type SymbolKeys<O> = {
+  [K in keyof O & string]: Identifier<K> extends true ? never : K;
+}[keyof O & string];
+type SymbolStart<O> = SymbolKeys<O> extends `${infer C}${string}` ? C : never;
 type ReadWordStep<
   O,
   S extends string,
   A extends string,
   C extends string,
   R extends string,
-> = [Match<O, S>] extends [never] ? ReadWord<O, R, `${A}${C}`>
-  : A extends "" ? readonly [A, S]
-  : Identifier<Match<O, S>> extends true ? ReadWord<O, R, `${A}${C}`>
-  : readonly [A, S];
+> = C extends SymbolStart<O>
+  ? [Candidates<O, S, SymbolKeys<O>>] extends [never]
+    ? ReadWord<O, R, `${A}${C}`>
+  : readonly [A, S]
+  : ReadWord<O, R, `${A}${C}`>;
 // Numbers have their own lexical grammar, independent of registered symbols.
 type TakeDigits<
   S extends string,
@@ -207,87 +229,99 @@ type ReadPrefixed<S extends string, A extends string = ""> = S extends
   `${infer C}${infer R}`
   ? C extends IdentPart | "-" ? ReadPrefixed<R, `${A}${C}`> : readonly [A, S]
   : readonly [A, ""];
-type AfterAtom<T extends readonly Token[]> = T extends
-  readonly [...Token[], infer Last extends Token]
+type AfterAtom<T extends TokenStream> = T extends
+  readonly [infer Last extends Token, unknown]
   ? Last[0] extends "word" | "string" | "prefixed" | "hole" | ")" ? true : false
   : false;
 type Lex<
   O,
   S extends string,
   P extends readonly string[],
-  T extends readonly Token[] = [],
+  T extends TokenStream = [],
   Space extends boolean = false,
-> = T["length"] extends 256 ? Deferred
-  : S extends "" ? T
-  : S extends `${WS}${infer R}` ? Lex<O, R, P, T, true>
+  Count extends readonly unknown[] = [],
+> = Count["length"] extends 256 ? Deferred
+  : S extends "" ? ReverseTokens<T>
+  : S extends `${WS}${infer R}` ? Lex<O, R, P, T, true, Count>
   : S extends `${infer Q extends "'" | '"'}${infer R}`
     ? ReadString<R, Q> extends infer X
-      ? X extends readonly [infer Rest extends string]
-        ? Lex<O, Rest, P, [...T, ["string", "", Space]]>
+      ? X extends readonly [infer Rest extends string] ? Lex<
+          O,
+          Rest,
+          P,
+          [["string", "", Space], T],
+          false,
+          [...Count, unknown]
+        >
       : X
     : never
   : S extends `?${infer R}`
     ? ReadHole<R> extends
       readonly [infer Name extends string, infer Rest extends string]
-      ? Lex<O, Rest, P, [...T, ["hole", Name, Space]]>
+      ? Lex<O, Rest, P, [["hole", Name, Space], T], false, [...Count, unknown]>
     : never
   : S extends `${infer C extends "(" | ")"}${infer R}`
-    ? Lex<O, R, P, [...T, [C, C, Space]]>
-  : S extends `${Digit}${string}` ? LexNumber<O, S, P, T, Space>
+    ? Lex<O, R, P, [[C, C, Space], T], false, [...Count, unknown]>
+  : S extends `${Digit}${string}` ? LexNumber<O, S, P, T, Space, Count>
   : S extends `.${Digit}${string}`
     ? AfterAtom<T> extends true
-      ? [Def<O, ".", 2>] extends [never] ? LexNumber<O, S, P, T, Space>
-      : LexMatched<O, S, P, T, Space>
-    : [Def<O, ".", 1>] extends [never] ? LexNumber<O, S, P, T, Space>
-    : LexMatched<O, S, P, T, Space>
-  : LexMatched<O, S, P, T, Space>;
+      ? [Def<O, ".", 2>] extends [never] ? LexNumber<O, S, P, T, Space, Count>
+      : LexMatched<O, S, P, T, Space, Count>
+    : [Def<O, ".", 1>] extends [never] ? LexNumber<O, S, P, T, Space, Count>
+    : LexMatched<O, S, P, T, Space, Count>
+  : LexMatched<O, S, P, T, Space, Count>;
 type LexMatched<
   O,
   S extends string,
   P extends readonly string[],
-  T extends readonly Token[],
+  T extends TokenStream,
   Space extends boolean,
+  Count extends readonly unknown[],
 > = [PrefixMatch<P, S>] extends [never]
   ? [Match<O, S>] extends [never]
     ? S extends `${"+" | "-"}${infer Numeric}`
-      ? NumberStart<Numeric> extends true ? LexNumber<O, S, P, T, Space>
-      : LexWord<O, S, P, T, Space>
-    : LexWord<O, S, P, T, Space>
+      ? NumberStart<Numeric> extends true ? LexNumber<O, S, P, T, Space, Count>
+      : LexWord<O, S, P, T, Space, Count>
+    : LexWord<O, S, P, T, Space, Count>
   : Match<O, S> extends infer K extends string
-    ? S extends `${K}${infer R}` ? Lex<O, R, P, [...T, ["op", K, Space]]>
+    ? S extends `${K}${infer R}`
+      ? Lex<O, R, P, [["op", K, Space], T], false, [...Count, unknown]>
     : never
   : never
   : S extends `${PrefixMatch<P, S>}${infer PrefixRest}`
     ? ReadPrefixed<PrefixRest, PrefixMatch<P, S>> extends
       readonly [infer W extends string, infer R extends string]
-      ? Lex<O, R, P, [...T, ["prefixed", W, Space]]>
+      ? Lex<O, R, P, [["prefixed", W, Space], T], false, [...Count, unknown]>
     : never
   : never;
 type LexNumber<
   O,
   S extends string,
   P extends readonly string[],
-  T extends readonly Token[],
+  T extends TokenStream,
   Space extends boolean,
+  Count extends readonly unknown[],
 > = ReadNumber<S> extends
   readonly [infer N extends string, infer R extends string]
-  ? Lex<O, R, P, [...T, ["word", N, Space]]>
+  ? Lex<O, R, P, [["word", N, Space], T], false, [...Count, unknown]>
   : never;
 type LexWord<
   O,
   S extends string,
   P extends readonly string[],
-  T extends readonly Token[],
+  T extends TokenStream,
   Space extends boolean,
+  Count extends readonly unknown[],
 > = ReadWord<O, S> extends
   readonly [infer W extends string, infer R extends string]
   ? W extends "" ? Failure<"unexpected token">
-  : Lex<O, R, P, [...T, ["word", W, Space]]>
+  : Lex<O, R, P, [["word", W, Space], T], false, [...Count, unknown]>
   : never;
 
-type TokenReferences<T extends readonly Token[]> =
-  Extract<T[number], readonly ["hole", string, boolean]> extends never ? false
-    : true;
+type TokenReferences<T extends TokenStream> = T extends
+  readonly [infer F extends Token, infer R extends TokenStream]
+  ? F[0] extends "hole" ? true : TokenReferences<R>
+  : false;
 type ArityRegistry<O, A extends 1 | 2> = {
   [K in keyof O as [Definition<O[K], A>] extends [never] ? never : K]: O[K];
 };
@@ -295,15 +329,15 @@ type SplitOperator<
   O,
   K extends string,
   A extends 1 | 2,
-  R extends readonly Token[],
+  R extends TokenStream,
   Space extends boolean = false,
 > = Match<ArityRegistry<O, A>, K> extends infer Short
   ? [Short] extends [never] ? never
   : Short extends string
     ? K extends `${Short}${infer Rest}`
       ? Lex<O, Rest, []> extends infer Tokens
-        ? Tokens extends readonly Token[]
-          ? readonly [["op", Short, Space], ...Tokens, ...R]
+        ? Tokens extends TokenStream
+          ? readonly [["op", Short, Space], AppendTokens<Tokens, R>]
         : never
       : never
     : never
@@ -321,7 +355,7 @@ type Eval<V = unknown, H extends readonly Hole[] = readonly Hole[]> = {
 type Ref<K extends Hole["kind"], N extends string> =
   & Eval<unknown, [{ kind: K; name: N; value: unknown }]>
   & { hole: true };
-type Parsed<E, T extends readonly Token[]> = { result: E; rest: T };
+type Parsed<E, T extends TokenStream> = { result: E; rest: T };
 type Constrain<E, V> = E extends Eval<infer Value, infer H>
   ? E extends { hole: true }
     ? H extends readonly [infer R extends Hole]
@@ -402,7 +436,7 @@ type Chain<Last, D extends Metadata> = Last extends Metadata
 type Expr<
   O,
   V,
-  T extends readonly Token[],
+  T extends TokenStream,
   Bound = undefined,
   Depth extends readonly unknown[] = [],
 > = Depth["length"] extends 24 ? Deferred
@@ -413,20 +447,19 @@ type Tail<
   O,
   V,
   E,
-  T extends readonly Token[],
+  T extends TokenStream,
   Bound,
   Depth extends readonly unknown[],
   Last = undefined,
 > = T extends readonly [
   ["op", infer K extends string, boolean],
-  ...infer R extends readonly Token[],
+  infer R extends TokenStream,
 ]
   ? Def<O, K, 2> extends infer D
     ? [D] extends [never]
       ? SplitOperator<O, K, 2, R> extends infer Tokens
         ? [Tokens] extends [never] ? Parsed<E, T>
-        : Tokens extends readonly Token[]
-          ? Tail<O, V, E, Tokens, Bound, Depth, Last>
+        : Tokens extends TokenStream ? Tail<O, V, E, Tokens, Bound, Depth, Last>
         : never
       : never
     : D extends Metadata
@@ -451,9 +484,8 @@ type Tail<
     : Failure<"invalid operator metadata">
   : never
   : Parsed<E, T>;
-type Atom<O, V, T extends readonly Token[], Depth extends readonly unknown[]> =
-  T extends
-    readonly [infer H extends Token, ...infer R extends readonly Token[]]
+type Atom<O, V, T extends TokenStream, Depth extends readonly unknown[]> =
+  T extends readonly [infer H extends Token, infer R extends TokenStream]
     ? H[0] extends "hole" ? H[1] extends "" ? Parsed<Ref<"anonymous", "">, R>
       : Digits<H[1]> extends true ? Parsed<Ref<"indexed", IndexName<H[1]>>, R>
       : Identifier<H[1]> extends true ? Parsed<Ref<"named", H[1]>, R>
@@ -464,7 +496,7 @@ type Atom<O, V, T extends readonly Token[], Depth extends readonly unknown[]> =
       ? [Def<O, H[1], 1>] extends [never]
         ? SplitOperator<O, H[1], 1, R> extends infer Tokens
           ? [Tokens] extends [never] ? SignedAtom<H[1], R>
-          : Tokens extends readonly Token[] ? Atom<O, V, Tokens, Depth>
+          : Tokens extends TokenStream ? Atom<O, V, Tokens, Depth>
           : never
         : never
       : Expr<O, V, R, Def<O, H[1], 1>, Depth> extends infer X
@@ -477,24 +509,23 @@ type Atom<O, V, T extends readonly Token[], Depth extends readonly unknown[]> =
     : H[0] extends "word" ? Word<O, V, H[1], R, Depth>
     : Failure<"expected an operand">
     : Failure<"expected an operand">;
-type SignedAtom<K extends string, T extends readonly Token[]> = K extends
-  "+" | "-" ? T extends readonly [
+type SignedAtom<K extends string, T extends TokenStream> = K extends "+" | "-"
+  ? T extends readonly [
     ["word", infer Numeric extends string, boolean],
-    ...infer R extends readonly Token[],
+    infer R extends TokenStream,
   ] ? `${K}${Numeric}` extends `${number}` ? Parsed<Eval<number, []>, R>
     : Failure<"expected an operand">
   : Failure<"expected an operand">
   : Failure<"expected an operand">;
-type Group<O, V, T extends readonly Token[], Depth extends readonly unknown[]> =
+type Group<O, V, T extends TokenStream, Depth extends readonly unknown[]> =
   T extends readonly [
     ["op", infer K extends keyof O & string, boolean],
-    [")", string, boolean],
-    ...infer R extends readonly Token[],
+    readonly [[")", string, boolean], infer R extends TokenStream],
   ] ? Parsed<Eval<O[K], []>, R>
     : Expr<O, V, T, undefined, Depth> extends infer X
       ? X extends Parsed<infer E, infer R> ? R extends readonly [
           [")", string, boolean],
-          ...infer Rest extends readonly Token[],
+          infer Rest extends TokenStream,
         ] ? Parsed<E, Rest>
         : Failure<"missing closing parenthesis">
       : X
@@ -503,7 +534,7 @@ type Word<
   O,
   V,
   W extends string,
-  R extends readonly Token[],
+  R extends TokenStream,
   Depth extends readonly unknown[],
 > = W extends `${number}` ? Parsed<Eval<number, []>, R>
   : W extends "true" | "false" ? Parsed<Eval<boolean, []>, R>
@@ -521,13 +552,13 @@ type StopsCall<O, First extends Token> = First[0] extends ")" ? true
 type Call<
   O,
   V,
-  T extends readonly Token[],
+  T extends TokenStream,
   P extends readonly unknown[],
   Result,
   Depth extends readonly unknown[],
   H extends readonly Hole[] = [],
   Count extends readonly unknown[] = [],
-> = T extends readonly [infer First extends Token, ...readonly Token[]]
+> = T extends readonly [infer First extends Token, unknown]
   ? First[2] extends true
     ? StopsCall<O, First> extends true ? FinishCall<T, P, Result, H, Count>
     : CallArgument<O, V, T, Depth> extends infer A
@@ -555,7 +586,7 @@ type DropParameter<P extends readonly unknown[]> = P extends
   : P extends readonly [unknown?, ...infer R] ? R
   : P;
 type FinishCall<
-  T extends readonly Token[],
+  T extends TokenStream,
   P extends readonly unknown[],
   Result,
   H extends readonly Hole[],
@@ -566,22 +597,22 @@ type FinishCall<
 type CallArgument<
   O,
   V,
-  T extends readonly Token[],
+  T extends TokenStream,
   Depth extends readonly unknown[],
 > = T extends readonly [
   ["op", infer K extends string, boolean],
-  ...infer R extends readonly Token[],
+  infer R extends TokenStream,
 ]
   ? Identifier<K> extends true
     ? Parsed<Eval<K extends keyof V ? V[K] : string, []>, R>
   : SignedAtom<K, R>
   : T extends readonly [
     ["prefixed", string, boolean],
-    ...infer Rest extends readonly Token[],
+    infer Rest extends TokenStream,
   ] ? Parsed<Eval<string, []>, Rest>
   : T extends readonly [
     ["word", infer W extends string, boolean],
-    ...infer R extends readonly Token[],
+    infer R extends TokenStream,
   ] ? W extends `${number}` | "true" | "false" ? Atom<O, V, T, Depth>
     : W extends keyof V ? Parsed<Eval<V[W], []>, R>
     : Identifier<W> extends true ? Parsed<Eval<string, []>, R>
@@ -593,7 +624,7 @@ type Analyze<O, V, E extends string, P extends readonly string[]> =
     : WithinSourceBudget<E> extends false ? Deferred
     : string extends keyof O ? Deferred
     : Lex<O, E, P> extends infer L
-      ? L extends readonly Token[]
+      ? L extends TokenStream
         ? Expr<O, V, L> extends infer X
           ? X extends Parsed<infer Result, infer Rest>
             ? Rest extends [] ? Result
@@ -603,44 +634,38 @@ type Analyze<O, V, E extends string, P extends readonly string[]> =
         : never
       : L
     : never;
-type Named<H extends readonly Hole[]> = Extract<H[number], { kind: "named" }>;
-type ValuesFor<
+// Fold bindings once; repeated names intersect their complete operand constraints.
+type Bindings<
   H extends readonly Hole[],
-  K extends Hole["kind"],
-  N extends string,
-  A = unknown,
+  N = Record<never, never>,
+  I = Record<never, never>,
+  A extends readonly unknown[] = [],
 > = H extends
-  readonly [infer First extends Hole, ...infer R extends readonly Hole[]]
-  ? First extends { kind: K; name: N } ? ValuesFor<R, K, N, A & First["value"]>
-  : ValuesFor<R, K, N, A>
-  : A;
-type Scope<H extends readonly Hole[]> = {
-  readonly [N in Named<H>["name"]]: ValuesFor<H, "named", N>;
-};
-type Anonymous<H extends readonly Hole[], A extends readonly unknown[] = []> =
-  H extends
-    readonly [infer First extends Hole, ...infer R extends readonly Hole[]]
-    ? First["kind"] extends "anonymous" ? Anonymous<R, [...A, First["value"]]>
-    : Anonymous<R, A>
-    : A;
-type IndexedNames<H extends readonly Hole[]> = Extract<
-  H[number],
-  { kind: "indexed" }
->["name"];
+  readonly [infer F extends Hole, ...infer R extends readonly Hole[]]
+  ? F["kind"] extends "named"
+    ? Bindings<R, N & Record<F["name"], F["value"]>, I, A>
+  : F["kind"] extends "indexed"
+    ? Bindings<R, N, I & Record<F["name"], F["value"]>, A>
+  : Bindings<R, N, I, [...A, F["value"]]>
+  : { named: N; indexed: I; anonymous: A };
 type Indexed<
-  H extends readonly Hole[],
-  Names extends string = IndexedNames<H>,
+  I,
+  Names extends string = keyof I & string,
   A extends readonly unknown[] = [],
 > = [Names] extends [never] ? A
   : A["length"] extends 100 ? readonly unknown[]
   : Indexed<
-    H,
+    I,
     Exclude<Names, `${A["length"]}`>,
-    [...A, ValuesFor<H, "indexed", `${A["length"]}`>]
+    [...A, `${A["length"]}` extends keyof I ? I[`${A["length"]}`] : unknown]
   >;
-type Args<H extends readonly Hole[]> = Named<H> extends never
-  ? readonly [...Indexed<H>, ...Anonymous<H>]
-  : readonly [Scope<H>, ...Indexed<H>, ...Anonymous<H>];
+type Args<H extends readonly Hole[]> = Bindings<H> extends {
+  named: infer N;
+  indexed: infer I;
+  anonymous: infer A extends readonly unknown[];
+} ? keyof N extends never ? readonly [...Indexed<I>, ...A]
+  : readonly [{ readonly [K in keyof N]: N[K] }, ...Indexed<I>, ...A]
+  : never;
 
 /** @internal Parsed expression information shared by the public string call signatures. */
 export type ExpressionAnalysis<

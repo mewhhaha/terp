@@ -1,0 +1,67 @@
+[
+  {
+    "name": "construct/small",
+    "count": 10000,
+    "warmup_count": 1000,
+    "elapsed_ms": 102.81898899999999,
+    "allocated_bytes": 77870112,
+    "allocated_bytes_per_op": 7787.0112,
+    "retained_bytes": 28858488,
+    "released_heap_delta_bytes": 138872,
+    "forced_gc_ms": 12.075566999999978,
+    "worker_gc_events": 17,
+    "worker_gc_pause_ms": 38.95
+  },
+  {
+    "name": "construct/large-100",
+    "count": 1000,
+    "warmup_count": 1000,
+    "elapsed_ms": 77.297179,
+    "allocated_bytes": 97028392,
+    "allocated_bytes_per_op": 97028.392,
+    "retained_bytes": 31706296,
+    "released_heap_delta_bytes": 10680,
+    "forced_gc_ms": 10.675815999999998,
+    "worker_gc_events": 21,
+    "worker_gc_pause_ms": 41.99
+  },
+  {
+    "name": "raw/arithmetic",
+    "count": 10000,
+    "warmup_count": 10000,
+    "elapsed_ms": 34.453430000000004,
+    "allocated_bytes": 26395240,
+    "allocated_bytes_per_op": 2639.524,
+    "retained_bytes": 13052624,
+    "released_heap_delta_bytes": -43304,
+    "forced_gc_ms": 11.408197000000001,
+    "worker_gc_events": 25,
+    "worker_gc_pause_ms": 26.23
+  },
+  {
+    "name": "run/arithmetic-reused",
+    "count": 10000,
+    "warmup_count": 100000,
+    "elapsed_ms": 1.0838110000000007,
+    "allocated_bytes": 1006944,
+    "allocated_bytes_per_op": 100.6944,
+    "retained_bytes": 3304,
+    "released_heap_delta_bytes": -68280,
+    "forced_gc_ms": 1.512035000000001,
+    "worker_gc_events": 10,
+    "worker_gc_pause_ms": 6.37
+  },
+  {
+    "name": "run/pricing-reused",
+    "count": 10000,
+    "warmup_count": 100000,
+    "elapsed_ms": 2.6889010000000013,
+    "allocated_bytes": 1346120,
+    "allocated_bytes_per_op": 134.612,
+    "retained_bytes": -4176,
+    "released_heap_delta_bytes": -83792,
+    "forced_gc_ms": 1.6519809999999993,
+    "worker_gc_events": 11,
+    "worker_gc_pause_ms": 6.02
+  }
+]

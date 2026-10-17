@@ -1,0 +1,90 @@
+{
+  "version": {
+    "deno": "2.9.7",
+    "v8": "15.0.245.2-rusty",
+    "typescript": "6.0.3"
+  },
+  "target": "x86_64-unknown-linux-gnu",
+  "host": {
+    "hostname": "cachyos-x8664",
+    "os_release": "7.2.9-2-cachyos",
+    "cpu": "AMD Ryzen 7 3800X 8-Core Processor",
+    "logical_cpus": 16,
+    "cpu_affinity": "0-15",
+    "scheduling_policy": "0"
+  },
+  "revision": "snapshot",
+  "source_sha256": "777de7330c4ac0b9d07a27dbd9c3b992398aab9d92c93dae48018629aa7110e4",
+  "workload_sha256": "54b0f28e7133b6cc15f548adb7bcf35110e2c7d2845f4a4a24c1d7843834c5e1",
+  "method": "seven fresh Deno processes per entry; normal on-disk module cache; process startup, module import, first parse, first execution separated",
+  "cases": {
+    "mod.ts": {
+      "medians": {
+        "import_ms": 1.6761970000000002,
+        "initialize_ms": 0.004668999999999812,
+        "first_parse_ms": 0.6668680000000009,
+        "first_run_ms": 0.21811399999999992,
+        "first_use_cpu_us": 2718,
+        "process_ms": 28.05525499999999
+      },
+      "samples": [
+        {
+          "import_ms": 5.2214670000000005,
+          "initialize_ms": 0.009838000000002012,
+          "first_parse_ms": 1.2907939999999982,
+          "first_run_ms": 0.40390800000000127,
+          "first_use_cpu_us": 7148,
+          "process_ms": 58.009181
+        },
+        {
+          "import_ms": 3.0324349999999995,
+          "initialize_ms": 0.011491000000003027,
+          "first_parse_ms": 1.2974669999999975,
+          "first_run_ms": 0.42331500000000233,
+          "first_use_cpu_us": 5019,
+          "process_ms": 53.476994000000005
+        },
+        {
+          "import_ms": 1.5650650000000006,
+          "initialize_ms": 0.002925999999998652,
+          "first_parse_ms": 0.6574299999999997,
+          "first_run_ms": 0.2124240000000004,
+          "first_use_cpu_us": 2599,
+          "process_ms": 30.97386499999999
+        },
+        {
+          "import_ms": 1.6761970000000002,
+          "initialize_ms": 0.004668999999999812,
+          "first_parse_ms": 0.6674289999999985,
+          "first_run_ms": 0.2118720000000014,
+          "first_use_cpu_us": 2712,
+          "process_ms": 26.489929999999987
+        },
+        {
+          "import_ms": 1.760266999999999,
+          "initialize_ms": 0.0030250000000009436,
+          "first_parse_ms": 0.6599050000000002,
+          "first_run_ms": 0.21811399999999992,
+          "first_use_cpu_us": 2806,
+          "process_ms": 28.05525499999999
+        },
+        {
+          "import_ms": 1.6598749999999995,
+          "initialize_ms": 0.0030359999999998166,
+          "first_parse_ms": 0.6668680000000009,
+          "first_run_ms": 0.22534800000000033,
+          "first_use_cpu_us": 2718,
+          "process_ms": 27.595981999999992
+        },
+        {
+          "import_ms": 1.6341160000000006,
+          "initialize_ms": 0.004668999999999812,
+          "first_parse_ms": 0.6510280000000002,
+          "first_run_ms": 0.2120829999999998,
+          "first_use_cpu_us": 2701,
+          "process_ms": 26.697585000000004
+        }
+      ]
+    }
+  }
+}

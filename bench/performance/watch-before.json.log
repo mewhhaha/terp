@@ -1,0 +1,49 @@
+{
+  "version": {
+    "deno": "2.9.7",
+    "v8": "15.0.245.2-rusty",
+    "typescript": "6.0.3"
+  },
+  "target": "x86_64-unknown-linux-gnu",
+  "host": {
+    "hostname": "cachyos-x8664",
+    "os_release": "7.2.9-2-cachyos",
+    "cpu": "AMD Ryzen 7 3800X 8-Core Processor",
+    "logical_cpus": 16,
+    "cpu_affinity": "0-15",
+    "scheduling_policy": "0"
+  },
+  "revision": "snapshot",
+  "source_sha256": "777de7330c4ac0b9d07a27dbd9c3b992398aab9d92c93dae48018629aa7110e4",
+  "workload_sha256": "adb789191826488828ecb79eedd5099cd41fcffbe51a03a3604b98d46a062672",
+  "method": "actual deno check --watch; five isolated consumer edits, completion marker includes watcher debounce",
+  "cold_check_ms": 739.5515959999999,
+  "median_edit_check_ms": 687.3801229999995,
+  "edit_check_ms": [
+    684.2175310000001,
+    687.55232,
+    681.3056350000002,
+    688.7399180000002,
+    687.3801229999995
+  ],
+  "log": [
+    "Watcher Check started.",
+    "Check ../../terp-watch-d90cf86b7b0b50e/edit.ts",
+    "Watcher Check finished. Restarting on file change...",
+    "Watcher Restarting! File change detected: \"/tmp/terp-watch-d90cf86b7b0b50e/edit.ts\"",
+    "Check ../../terp-watch-d90cf86b7b0b50e/edit.ts",
+    "Watcher Check finished. Restarting on file change...",
+    "Watcher Restarting! File change detected: \"/tmp/terp-watch-d90cf86b7b0b50e/edit.ts\"",
+    "Check ../../terp-watch-d90cf86b7b0b50e/edit.ts",
+    "Watcher Check finished. Restarting on file change...",
+    "Watcher Restarting! File change detected: \"/tmp/terp-watch-d90cf86b7b0b50e/edit.ts\"",
+    "Check ../../terp-watch-d90cf86b7b0b50e/edit.ts",
+    "Watcher Check finished. Restarting on file change...",
+    "Watcher Restarting! File change detected: \"/tmp/terp-watch-d90cf86b7b0b50e/edit.ts\"",
+    "Check ../../terp-watch-d90cf86b7b0b50e/edit.ts",
+    "Watcher Check finished. Restarting on file change...",
+    "Watcher Restarting! File change detected: \"/tmp/terp-watch-d90cf86b7b0b50e/edit.ts\"",
+    "Check ../../terp-watch-d90cf86b7b0b50e/edit.ts",
+    "Watcher Check finished. Restarting on file change..."
+  ]
+}

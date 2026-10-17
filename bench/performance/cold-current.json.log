@@ -1,0 +1,138 @@
+{
+  "mod.ts": {
+    "medians": {
+      "import_ms": 1.9843620000000008,
+      "initialize_ms": 0.0046989999999986765,
+      "first_parse_ms": 0.7523500000000016,
+      "first_run_ms": 0.2353670000000001,
+      "first_use_cpu_us": 3163,
+      "process_ms": 31.916747
+    },
+    "samples": [
+      {
+        "import_ms": 3.4262440000000005,
+        "initialize_ms": 0.005329999999998947,
+        "first_parse_ms": 0.7515190000000018,
+        "first_run_ms": 0.24162899999999965,
+        "first_use_cpu_us": 4525,
+        "process_ms": 31.916747
+      },
+      {
+        "import_ms": 1.9062940000000008,
+        "initialize_ms": 0.0029360000000000497,
+        "first_parse_ms": 0.7495849999999997,
+        "first_run_ms": 0.2347360000000016,
+        "first_use_cpu_us": 2994,
+        "process_ms": 33.031105000000004
+      },
+      {
+        "import_ms": 3.572431999999999,
+        "initialize_ms": 0.005610000000000781,
+        "first_parse_ms": 1.4782210000000013,
+        "first_run_ms": 0.4558959999999992,
+        "first_use_cpu_us": 5712,
+        "process_ms": 55.355194999999995
+      },
+      {
+        "import_ms": 1.8582330000000002,
+        "initialize_ms": 0.0030749999999990507,
+        "first_parse_ms": 0.7482630000000015,
+        "first_run_ms": 0.23216099999999962,
+        "first_use_cpu_us": 3076,
+        "process_ms": 27.22924500000002
+      },
+      {
+        "import_ms": 3.633979,
+        "initialize_ms": 0.006332000000000448,
+        "first_parse_ms": 1.4761960000000016,
+        "first_run_ms": 0.46809999999999974,
+        "first_use_cpu_us": 5775,
+        "process_ms": 49.42957999999999
+      },
+      {
+        "import_ms": 1.9194689999999994,
+        "initialize_ms": 0.0029959999999995546,
+        "first_parse_ms": 0.7958230000000004,
+        "first_run_ms": 0.2353670000000001,
+        "first_use_cpu_us": 3100,
+        "process_ms": 27.26055500000001
+      },
+      {
+        "import_ms": 1.9843620000000008,
+        "initialize_ms": 0.0046989999999986765,
+        "first_parse_ms": 0.7523500000000016,
+        "first_run_ms": 0.2345859999999984,
+        "first_use_cpu_us": 3163,
+        "process_ms": 30.77841200000003
+      }
+    ]
+  },
+  "core.ts": {
+    "medians": {
+      "import_ms": 2.4023070000000004,
+      "initialize_ms": 0.749604999999999,
+      "first_parse_ms": 1.4083770000000015,
+      "first_run_ms": 0.45041599999999704,
+      "first_use_cpu_us": 5115,
+      "process_ms": 51.43505200000004
+    },
+    "samples": [
+      {
+        "import_ms": 2.414951000000002,
+        "initialize_ms": 0.749604999999999,
+        "first_parse_ms": 1.4668789999999987,
+        "first_run_ms": 0.4605950000000014,
+        "first_use_cpu_us": 5194,
+        "process_ms": 51.68625999999995
+      },
+      {
+        "import_ms": 1.2624700000000004,
+        "initialize_ms": 0.37233800000000095,
+        "first_parse_ms": 0.8365199999999984,
+        "first_run_ms": 0.22872500000000073,
+        "first_use_cpu_us": 2695,
+        "process_ms": 31.537365000000023
+      },
+      {
+        "import_ms": 2.3255809999999997,
+        "initialize_ms": 0.7708960000000005,
+        "first_parse_ms": 1.4626599999999996,
+        "first_run_ms": 0.465205000000001,
+        "first_use_cpu_us": 5115,
+        "process_ms": 48.19956099999996
+      },
+      {
+        "import_ms": 2.488731999999999,
+        "initialize_ms": 0.7745530000000009,
+        "first_parse_ms": 0.9931780000000003,
+        "first_run_ms": 0.2380519999999997,
+        "first_use_cpu_us": 4529,
+        "process_ms": 51.477292999999975
+      },
+      {
+        "import_ms": 1.2741420000000012,
+        "initialize_ms": 0.37814899999999874,
+        "first_parse_ms": 0.7355780000000003,
+        "first_run_ms": 0.22902600000000106,
+        "first_use_cpu_us": 2719,
+        "process_ms": 33.573766999999975
+      },
+      {
+        "import_ms": 2.6426139999999982,
+        "initialize_ms": 0.7914950000000012,
+        "first_parse_ms": 1.4083770000000015,
+        "first_run_ms": 0.47072499999999806,
+        "first_use_cpu_us": 5437,
+        "process_ms": 55.79368899999997
+      },
+      {
+        "import_ms": 2.4023070000000004,
+        "initialize_ms": 0.7453469999999989,
+        "first_parse_ms": 1.4338460000000026,
+        "first_run_ms": 0.45041599999999704,
+        "first_use_cpu_us": 5135,
+        "process_ms": 51.43505200000004
+      }
+    ]
+  }
+}

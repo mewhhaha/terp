@@ -3,7 +3,8 @@
   "version": "0.4.0",
   "license": "MIT",
   "exports": {
-    ".": "./mod.ts"
+    ".": "./mod.ts",
+    "./core": "./core.ts"
   },
   "publish": {
     "include": [
@@ -16,7 +17,8 @@
       "examples/**/*.json",
       "examples/**/*.md",
       "examples/**/*.ts",
-      "src/**/*.ts"
+      "src/**/*.ts",
+      "core.ts"
     ],
     "exclude": [
       "src/assert.ts",
@@ -25,8 +27,8 @@
   },
   "tasks": {
     "ci": "deno task fmt:check && deno task lint && deno task doc:lint && deno task check && deno task test:ci && deno task examples && deno task types:budget && deno task publish:dry-run",
-    "check": "deno check mod.ts src/*.test.ts examples/*.ts bench/*.ts scripts/*.ts",
-    "doc:lint": "deno doc --lint mod.ts",
+    "check": "deno check mod.ts core.ts src/*.test.ts examples/*.ts bench/*.ts bench/experiments/*.ts scripts/*.ts",
+    "doc:lint": "deno doc --lint mod.ts core.ts",
     "examples": "deno run --allow-read=examples,scripts --allow-run=deno scripts/examples.ts",
     "fmt": "deno fmt",
     "fmt:check": "deno fmt --check",
@@ -35,9 +37,14 @@
     "test": "deno test",
     "test:ci": "deno test --no-check",
     "examples:update": "deno run --allow-read=examples,scripts --allow-write=scripts/examples.golden.json --allow-run=deno scripts/examples.ts --update",
-    "bench": "deno run --no-check --allow-read --allow-write --allow-run=git scripts/bench.ts",
+    "bench": "deno run --no-check --allow-read --allow-write --allow-run=git,cat --allow-sys scripts/bench.ts",
     "types:budget": "deno run --no-check --allow-read --allow-write --allow-run=deno,git scripts/type_bench.ts - bench/type-budget.json 1",
     "types:bench": "deno run --no-check --allow-read --allow-write --allow-run=deno,git scripts/type_bench.ts",
-    "bench:lookup": "deno run --allow-read --allow-write scripts/lookup_bench.ts"
+    "bench:lookup": "deno run --allow-read --allow-write scripts/lookup_bench.ts",
+    "bench:quick": "deno task bench --samples=3 --ms=10 --filter=run/arithmetic",
+    "bench:qualify": "deno run --no-check --allow-read --allow-write --allow-run --allow-sys scripts/qualify.ts",
+    "bench:lsp": "deno run --no-check --allow-read --allow-write --allow-run --allow-sys scripts/lsp_bench.ts",
+    "check:watch": "deno check --watch --no-clear-screen mod.ts",
+    "test:watch": "deno test --watch --no-check"
   }
 }

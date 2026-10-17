@@ -1,81 +1,45 @@
-import { failure, InterpreterError, type SourceSpan } from "./errors.ts";
-import type {
-  OperatorDefinition,
-  OperatorEntry,
-  OperatorRegistry,
+import { failure } from "./errors.ts";
+import {
+  type OperatorDefinition,
+  type OperatorEntry,
+  type OperatorRegistry,
+  validate_operator_definition,
+  validate_operator_token,
 } from "./operators.ts";
 
-/** Operator metadata supplied to application hooks. */
-export interface RuntimeOperator {
-  /** Registered token. */
+import type { Node, Plan, Reference, RuntimeOperator } from "./execution.ts";
+export type {
+  InterpreterApplyOperator,
+  Plan,
+  RuntimeOperator,
+  TraceStep,
+} from "./execution.ts";
+
+interface TokenOperators {
   readonly token: string;
-  /** Immutable operator metadata and callbacks. */
-  readonly definition: OperatorDefinition;
+  readonly word: boolean;
+  readonly first: RuntimeOperator;
+  readonly unary?: RuntimeOperator;
+  readonly binary?: RuntimeOperator;
 }
-
-/** Replace operator application. Overrides the operator's lazy behavior too. */
-export type InterpreterApplyOperator = (
-  operator: RuntimeOperator,
-  ...operands: readonly unknown[]
-) => unknown;
-
-/** One completed operation in an execution trace, in execution order. */
-export interface TraceStep {
-  /** Operation category. */
-  readonly kind: "operator" | "function";
-  /** Registered function or operator name. */
-  readonly name: string;
-  /** Source range of the operation. */
-  readonly span: SourceSpan;
-  /** Evaluated operands; lazy branches may leave empty slots. */
-  readonly operands: readonly unknown[];
-  /** Returned value. */
-  readonly result: unknown;
-}
-
-type Base = { start: number; end: number; height: number; grouped?: boolean };
-type Literal = Base & { kind: "literal"; value: unknown };
-type Reference = Base & {
-  kind: "reference";
-  slot: number;
-  key?: string;
-  label: string;
-  anonymous?: number;
-};
-type Operation = Base & {
-  kind: "operator";
-  operator: RuntimeOperator;
-  operands: Node[];
-  operatorSpan: SourceSpan;
-};
-type Call = Base & {
-  kind: "function";
-  name: string;
-  fn: (...args: unknown[]) => unknown;
-  operands: Node[];
-};
-type Node = Literal | Reference | Operation | Call;
-
-export interface Plan {
-  readonly source: string;
-  readonly root: Node;
-  readonly references: readonly Reference[];
-  readonly argumentCount: number;
-  readonly composed?: true;
-}
-
-export interface Grammar {
+interface OperatorTable {
   readonly operators: OperatorRegistry;
+  readonly tokens: readonly string[];
+  readonly buckets: ReadonlyMap<string, readonly TokenOperators[]>;
+}
+export interface Grammar extends OperatorTable {
   readonly values: Readonly<Record<string, unknown>>;
   readonly prefixes: readonly string[];
-  readonly tokens: readonly string[];
-  readonly buckets: ReadonlyMap<string, readonly string[]>;
 }
 
+// Only snapshots prepared here are trusted. Mutable application tables are never cached.
+const tables = new WeakMap<OperatorRegistry, OperatorTable>();
+
 const MAX_DEPTH = 128;
-const identifier = /^[A-Za-z_$][A-Za-z0-9_$]*/;
+const identifier = /[A-Za-z_$][A-Za-z0-9_$]*/y;
+const digits = /\d+/y;
 const number =
-  /^(?:0[xX][0-9a-fA-F]+|0[bB][01]+|0[oO][0-7]+|[+-]?(?:(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?))/;
+  /(?:0[xX][0-9a-fA-F]+|0[bB][01]+|0[oO][0-7]+|[+-]?(?:(?:\d+\.\d*|\.\d+|\d+)(?:[eE][+-]?\d+)?))/y;
 const symbols = /^[!#$%&*+./:<=>@\\^|~-]$/;
 const escapes: Readonly<Record<string, string>> = {
   "\\": "\\",
@@ -86,9 +50,99 @@ const escapes: Readonly<Record<string, string>> = {
   t: "\t",
 };
 
-function definitions(entry: OperatorEntry): readonly OperatorDefinition[] {
-  if (Array.isArray(entry)) return entry;
-  return [entry as OperatorDefinition];
+function scan(
+  pattern: RegExp,
+  source: string,
+  index: number,
+): RegExpExecArray | null {
+  pattern.lastIndex = index;
+  return pattern.exec(source);
+}
+function identifier_start(code: number): boolean {
+  return (code >= 65 && code <= 90) || (code >= 97 && code <= 122) ||
+    code === 95 || code === 36;
+}
+
+function prepare_table(operators: OperatorRegistry): OperatorTable {
+  const known = tables.get(operators);
+  if (known !== undefined) return known;
+  const registry: Record<string, OperatorEntry> = Object.create(null);
+  const buckets = new Map<string, TokenOperators[]>();
+  const tokens = Object.keys(operators);
+  for (const token of tokens) {
+    validate_operator_token(token);
+    const entry = operators[token];
+    let definitions: readonly OperatorDefinition[];
+    if (Array.isArray(entry)) definitions = entry;
+    else definitions = [entry as OperatorDefinition];
+    if (definitions.length === 0) {
+      throw new TypeError(
+        "operator `" + token + "` must have at least one definition",
+      );
+    }
+    let arities = 0;
+    let unary: RuntimeOperator | undefined;
+    let binary: RuntimeOperator | undefined;
+    const copy: OperatorDefinition[] = [];
+    for (const definition of definitions) {
+      validate_operator_definition(token, definition);
+      const bit = 1 << definition.arity;
+      if (arities & bit) {
+        throw new TypeError(
+          "operator `" + token + "` has more than one arity `" +
+            definition.arity + "` definition",
+        );
+      }
+      arities |= bit;
+      // One final object, including inherited metadata and bound prototype methods.
+      const snapshot = { ...definition } as unknown as Record<string, unknown>;
+      snapshot.kind = definition.kind;
+      snapshot.arity = definition.arity;
+      snapshot.precedence = definition.precedence;
+      snapshot.apply = definition.apply;
+      if (!Object.hasOwn(definition, "apply")) {
+        snapshot.apply = definition.apply.bind(definition);
+      }
+      if (definition.arity === 2) {
+        snapshot.direction = definition.direction;
+        if (definition.lazy !== undefined) {
+          snapshot.lazy = definition.lazy;
+          if (!Object.hasOwn(definition, "lazy")) {
+            snapshot.lazy = definition.lazy.bind(definition);
+          }
+        }
+      }
+      const frozen = Object.freeze(snapshot) as unknown as OperatorDefinition;
+      copy.push(frozen);
+      const descriptor = Object.freeze({ token, definition: frozen });
+      if (definition.arity === 1) unary = descriptor;
+      else binary = descriptor;
+    }
+    if (Array.isArray(entry)) {
+      registry[token] = Object.freeze(copy) as unknown as OperatorEntry;
+    } else registry[token] = copy[0];
+    let first = unary;
+    if (copy[0].arity === 2) first = binary;
+    const prepared = {
+      token,
+      word: /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(token),
+      first: first!,
+      unary,
+      binary,
+    };
+    let bucket = buckets.get(token[0]);
+    if (bucket === undefined) {
+      bucket = [];
+      buckets.set(token[0], bucket);
+    }
+    bucket.push(prepared);
+  }
+  for (const bucket of buckets.values()) {
+    bucket.sort((a, b) => b.token.length - a.token.length);
+  }
+  const table = { operators: Object.freeze(registry), tokens, buckets };
+  tables.set(table.operators, table);
+  return table;
 }
 
 export function make_grammar(
@@ -96,45 +150,7 @@ export function make_grammar(
   values: Readonly<Record<string, unknown>>,
   prefixes: readonly string[],
 ): Grammar {
-  const registry: Record<string, OperatorEntry> = Object.create(null);
-  for (const [token, entry] of Object.entries(operators)) {
-    const copy = definitions(entry).map((definition) => {
-      let apply = definition.apply;
-      if (!Object.hasOwn(definition, "apply")) apply = apply.bind(definition);
-      const copied = {
-        ...definition,
-        kind: definition.kind,
-        arity: definition.arity,
-        precedence: definition.precedence,
-        apply,
-      };
-      if (definition.arity === 2) {
-        const binary = {
-          ...copied,
-          arity: 2 as const,
-          direction: definition.direction,
-          apply: apply as typeof definition.apply,
-          lazy: definition.lazy,
-        };
-        if (binary.lazy === undefined) {
-          const { lazy: _unused, ...eager } = binary;
-          return Object.freeze(eager);
-        }
-        if (binary.lazy !== undefined && !Object.hasOwn(definition, "lazy")) {
-          binary.lazy = binary.lazy.bind(definition);
-        }
-        return Object.freeze(binary);
-      }
-      return Object.freeze({
-        ...copied,
-        arity: 1 as const,
-        apply: apply as typeof definition.apply,
-      });
-    });
-    if (Array.isArray(entry)) {
-      registry[token] = Object.freeze(copy) as unknown as OperatorEntry;
-    } else registry[token] = copy[0];
-  }
+  const table = prepare_table(operators);
   const vocabulary = Object.freeze({ ...values });
   for (const name of Object.keys(vocabulary)) {
     if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name)) {
@@ -148,7 +164,7 @@ export function make_grammar(
           "` is reserved for boolean literals",
       );
     }
-    if (Object.hasOwn(registry, name)) {
+    if (Object.hasOwn(table.operators, name)) {
       throw new TypeError(
         "interpreter value name `" + name +
           "` must not conflict with an operator token",
@@ -164,22 +180,10 @@ export function make_grammar(
       "word prefixes must be nonempty strings without whitespace",
     );
   }
-  const tokens = Object.keys(registry).sort((a, b) => b.length - a.length);
-  const buckets = new Map<string, string[]>();
-  for (const token of tokens) {
-    let bucket = buckets.get(token[0]);
-    if (bucket === undefined) {
-      bucket = [];
-      buckets.set(token[0], bucket);
-    }
-    bucket.push(token);
-  }
   return {
-    operators: Object.freeze(registry),
+    ...table,
     values: vocabulary,
     prefixes: Object.freeze([...prefixes].sort((a, b) => b.length - a.length)),
-    tokens: Object.freeze(tokens),
-    buckets,
   };
 }
 
@@ -189,7 +193,14 @@ class Parser {
   indexed = 0;
   anonymous = 0;
   named = false;
-  constructor(readonly grammar: Grammar, readonly source: string) {}
+  needsValue = false;
+  acceptsWord = false;
+  completionNode?: { node: Node; grouped: boolean };
+  constructor(
+    readonly grammar: Grammar,
+    readonly source: string,
+    readonly completionAt = -1,
+  ) {}
 
   fail(message: string, start = this.index, end = start + 1): never {
     throw failure("syntax", message, this.source, {
@@ -199,18 +210,30 @@ class Parser {
   }
 
   skip(): void {
-    while (
-      this.index < this.source.length && /\s/.test(this.source[this.index])
-    ) this.index++;
+    while (this.index < this.source.length) {
+      const code = this.source.charCodeAt(this.index);
+      if (code === 32 || (code >= 9 && code <= 13)) this.index++;
+      else if (code > 127 && /\s/.test(this.source[this.index])) this.index++;
+      else break;
+    }
   }
 
   operator(arity?: 1 | 2): RuntimeOperator | undefined {
-    for (
-      const token of this.grammar.buckets.get(this.source[this.index]) ?? []
-    ) {
+    const bucket = this.grammar.buckets.get(this.source[this.index]);
+    if (bucket === undefined) return undefined;
+    for (const entry of bucket) {
+      let descriptor = entry.first;
+      if (arity === 1) {
+        if (entry.unary === undefined) continue;
+        descriptor = entry.unary;
+      } else if (arity === 2) {
+        if (entry.binary === undefined) continue;
+        descriptor = entry.binary;
+      }
+      const token = entry.token;
       if (!this.source.startsWith(token, this.index)) continue;
       const after = this.source[this.index + token.length];
-      if (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(token)) {
+      if (entry.word) {
         if (after !== undefined && /[A-Za-z0-9_$]/.test(after)) continue;
       } else if (arity === 2 && after !== undefined && symbols.test(after)) {
         const saved = this.index;
@@ -219,15 +242,10 @@ class Parser {
         this.index = saved;
         if (
           unary === undefined &&
-          !number.test(this.source.slice(saved + token.length))
+          scan(number, this.source, saved + token.length) === null
         ) continue;
       }
-      const entry = this.grammar.operators[token];
-      for (const definition of definitions(entry)) {
-        if (arity === undefined || definition.arity === arity) {
-          return Object.freeze({ token, definition });
-        }
-      }
+      return descriptor;
     }
     return undefined;
   }
@@ -296,6 +314,8 @@ class Parser {
         end: this.index + next.token.length,
       };
       this.index = operatorSpan.end;
+      this.skip();
+      const rightStart = this.index;
       const right = this.expression(
         depth + 1,
         definition.precedence,
@@ -306,8 +326,7 @@ class Parser {
         right.kind === "operator" && !right.grouped &&
         right.operator.definition.arity === 2 &&
         right.operator.definition.precedence === definition.precedence &&
-        right.start ===
-          operatorSpan.end + this.source.slice(operatorSpan.end).search(/\S/)
+        right.start === rightStart
       ) {
         if (right.operator.definition.direction !== definition.direction) {
           this.fail(
@@ -337,6 +356,9 @@ class Parser {
         { start: left.start, end: left.end },
       );
     }
+    if (this.index === this.completionAt) {
+      this.completionNode = { node: left, grouped: left.grouped === true };
+    }
     return left;
   }
 
@@ -345,12 +367,22 @@ class Parser {
     const start = this.index;
     const char = this.source[start];
     if (char === undefined || char === ")") {
+      if (start === this.completionAt) {
+        this.needsValue = true;
+        return {
+          kind: "literal",
+          value: undefined,
+          start,
+          end: start,
+          height: 1,
+        };
+      }
       this.fail("expression is missing a value", start, start);
     }
     if (char === "?") {
       this.index++;
-      const digits = /^\d+/.exec(this.source.slice(this.index));
-      const name = identifier.exec(this.source.slice(this.index));
+      const indexDigits = scan(digits, this.source, this.index);
+      const name = scan(identifier, this.source, this.index);
       const ref: Reference = {
         kind: "reference",
         slot: 0,
@@ -359,18 +391,18 @@ class Parser {
         end: start,
         height: 1,
       };
-      if (digits !== null) {
-        const value = Number(digits[0]);
+      if (indexDigits !== null) {
+        const value = Number(indexDigits[0]);
         if (!Number.isSafeInteger(value)) {
           this.fail(
-            "placeholder index `" + digits[0] + "` is too large",
+            "placeholder index `" + indexDigits[0] + "` is too large",
             start,
-            this.index + digits[0].length,
+            this.index + indexDigits[0].length,
           );
         }
         ref.slot = value;
-        ref.label = "?" + digits[0];
-        this.index += digits[0].length;
+        ref.label = "?" + indexDigits[0];
+        this.index += indexDigits[0].length;
         this.indexed = Math.max(this.indexed, value + 1);
       } else if (name !== null) {
         ref.key = name[0];
@@ -391,7 +423,9 @@ class Parser {
         const saved = this.index;
         this.index += op.token.length;
         this.skip();
-        if (this.source[this.index] === ")") {
+        if (
+          this.source[this.index] === ")" && this.index !== this.completionAt
+        ) {
           this.index++;
           return {
             kind: "literal",
@@ -403,7 +437,7 @@ class Parser {
         }
         this.index = saved;
       }
-      if (this.source[this.index] === ")") {
+      if (this.source[this.index] === ")" && this.index !== this.completionAt) {
         this.fail(
           "expected an expression inside parentheses",
           start,
@@ -417,46 +451,58 @@ class Parser {
       }
       this.index++;
       // Group spans prevent outer associativity checks from inspecting through parentheses.
-      Object.assign(inner, { start, end: this.index, grouped: true });
+      inner.start = start;
+      inner.end = this.index;
+      inner.grouped = true;
       return inner;
     }
     if (char === "'" || char === '"') {
       this.index++;
+      let segment = this.index;
       let value = "";
-      while (
-        this.index < this.source.length && this.source[this.index] !== char
-      ) {
-        const part = this.source[this.index++];
-        if (part !== "\\") value += part;
-        else {
-          const escape = this.source[this.index++];
-          if (escape === undefined) {
-            this.fail(
-              "string literal has an incomplete escape",
-              start,
-              this.index,
-            );
-          }
-          if (!Object.hasOwn(escapes, escape)) {
-            this.fail(
-              "string literal has unsupported escape `" + escape + "`",
-              this.index - 2,
-              this.index,
-            );
-          }
-          value += escapes[escape];
+      let end = this.source.indexOf(char, this.index);
+      while (true) {
+        const escapeAt = this.source.indexOf("\\", this.index);
+        if (end < 0 && escapeAt < 0) {
+          this.fail(
+            "string literal is missing closing quote",
+            start,
+            this.source.length,
+          );
+        }
+        if (end >= 0 && (escapeAt < 0 || escapeAt > end)) {
+          value += this.source.slice(segment, end);
+          this.index = end + 1;
+          return { kind: "literal", value, start, end: this.index, height: 1 };
+        }
+        value += this.source.slice(segment, escapeAt);
+        this.index = escapeAt + 2;
+        const escape = this.source[escapeAt + 1];
+        if (escape === undefined) {
+          this.fail(
+            "string literal has an incomplete escape",
+            start,
+            this.index,
+          );
+        }
+        if (!Object.hasOwn(escapes, escape)) {
+          this.fail(
+            "string literal has unsupported escape `" + escape + "`",
+            escapeAt,
+            this.index,
+          );
+        }
+        value += escapes[escape];
+        segment = this.index;
+        if (end >= 0 && this.index > end) {
+          end = this.source.indexOf(char, this.index);
         }
       }
-      if (this.source[this.index] !== char) {
-        this.fail("string literal is missing closing quote", start, this.index);
-      }
-      this.index++;
-      return { kind: "literal", value, start, end: this.index, height: 1 };
     }
     if (word) {
       for (const prefix of this.grammar.prefixes) {
         if (!this.source.startsWith(prefix, start)) continue;
-        const name = identifier.exec(this.source.slice(start + prefix.length));
+        const name = scan(identifier, this.source, start + prefix.length);
         if (name !== null) {
           this.index += prefix.length + name[0].length;
           return {
@@ -469,7 +515,7 @@ class Parser {
         }
       }
     }
-    const numeric = number.exec(this.source.slice(start));
+    const numeric = scan(number, this.source, start);
     if (numeric !== null) {
       const value = Number(numeric[0]);
       this.index += numeric[0].length;
@@ -478,7 +524,7 @@ class Parser {
       }
       return { kind: "literal", value, start, end: this.index, height: 1 };
     }
-    const name = identifier.exec(this.source.slice(start));
+    const name = scan(identifier, this.source, start);
     if (name !== null) {
       this.index += name[0].length;
       if (name[0] === "true" || name[0] === "false") {
@@ -510,9 +556,13 @@ class Parser {
       const value = this.grammar.values[name[0]];
       if (!word && typeof value === "function") {
         const operands: Node[] = [];
+        let height = 0;
         while (this.index < this.source.length) {
           const before = this.index;
           this.skip();
+          if (before !== this.index && this.index === this.completionAt) {
+            this.acceptsWord = true;
+          }
           if (
             before === this.index || this.index >= this.source.length ||
             this.source[this.index] === ")" || this.operator(2) !== undefined
@@ -520,13 +570,15 @@ class Parser {
           const next = this.source[this.index];
           if (
             next !== "?" && next !== "(" && next !== "'" && next !== '"' &&
-            !identifier.test(this.source.slice(this.index)) &&
-            !number.test(this.source.slice(this.index)) &&
+            !identifier_start(this.source.charCodeAt(this.index)) &&
+            scan(number, this.source, this.index) === null &&
             !this.grammar.prefixes.some((prefix) =>
               this.source.startsWith(prefix, this.index)
             )
           ) break;
-          operands.push(this.atom(depth + 1, true));
+          const operand = this.atom(depth + 1, true);
+          operands.push(operand);
+          height = Math.max(height, operand.height);
         }
         if (operands.length > 0) {
           return {
@@ -536,7 +588,7 @@ class Parser {
             operands,
             start,
             end: operands[operands.length - 1].end,
-            height: Math.max(...operands.map((node) => node.height)) + 1,
+            height: height + 1,
           };
         }
       }
@@ -596,207 +648,6 @@ export function compile(grammar: Grammar, source: string): Plan {
   };
 }
 
-function validate(plan: Plan, values: readonly unknown[]): void {
-  for (const ref of plan.references) {
-    if (ref.key !== undefined) {
-      const scope = values[ref.slot];
-      if (typeof scope !== "object" || scope === null) {
-        throw failure(
-          "arguments",
-          "expression expected a scope object",
-          plan.source,
-          ref,
-        );
-      }
-      if (!Object.hasOwn(scope, ref.key)) {
-        throw failure(
-          "arguments",
-          "expression scope is missing `" + ref.key + "`",
-          plan.source,
-          ref,
-        );
-      }
-    } else if (ref.slot >= values.length) {
-      throw failure(
-        "arguments",
-        "expression is missing a value for placeholder `" + ref.label + "`",
-        plan.source,
-        ref,
-      );
-    }
-  }
-  if (values.length > plan.argumentCount) {
-    throw failure(
-      "arguments",
-      "expression received too many values",
-      plan.source,
-      { start: 0, end: plan.source.length },
-    );
-  }
-}
-
-export function execute(
-  plan: Plan,
-  values: readonly unknown[],
-  hook?: InterpreterApplyOperator,
-  trace?: TraceStep[],
-): unknown {
-  validate(plan, values);
-  const evaluate = (node: Node): unknown => {
-    if (node.kind === "literal") return node.value;
-    if (node.kind === "reference") {
-      if (node.key !== undefined) {
-        return (values[node.slot] as Record<string, unknown>)[node.key];
-      }
-      return values[node.slot];
-    }
-    const operands: unknown[] = [];
-    let result: unknown;
-    let name: string;
-    let span: SourceSpan = node;
-    if (node.kind === "function") name = node.name;
-    else {
-      name = node.operator.token;
-      span = node.operatorSpan;
-    }
-    try {
-      if (
-        node.kind === "operator" && hook === undefined &&
-        node.operator.definition.arity === 2 &&
-        node.operator.definition.lazy !== undefined
-      ) {
-        const read = (index: number): () => unknown => {
-          let done = false;
-          let value: unknown;
-          return () => {
-            if (!done) {
-              value = evaluate(node.operands[index]);
-              operands[index] = value;
-              done = true;
-            }
-            return value;
-          };
-        };
-        result = node.operator.definition.lazy(read(0), read(1));
-      } else {
-        for (const operand of node.operands) operands.push(evaluate(operand));
-        if (node.kind === "function") {
-          const fn = node.fn;
-          result = fn(...operands);
-        } else if (hook !== undefined) {
-          result = hook(node.operator, ...operands);
-        } else if (node.operator.definition.arity === 1) {
-          result = node.operator.definition.apply(operands[0]);
-        } else {
-          result = node.operator.definition.apply(
-            operands[0],
-            operands[1],
-          );
-        }
-      }
-    } catch (cause) {
-      if (cause instanceof InterpreterError) {
-        throw cause;
-      }
-      let message = String(cause);
-      if (cause instanceof Error) message = cause.message;
-      throw failure(
-        node.kind,
-        node.kind + " `" + name + "` failed: " + message,
-        plan.source,
-        span,
-        cause,
-      );
-    }
-    if (trace !== undefined) {
-      trace.push({
-        kind: node.kind,
-        name,
-        span: { start: span.start, end: span.end },
-        operands,
-        result,
-      });
-    }
-    return result;
-  };
-  return evaluate(plan.root);
-}
-
-export function combine_plans(
-  operator: RuntimeOperator,
-  plans: readonly Plan[],
-): Plan {
-  const sources = plans.map((plan) => "(" + plan.source + ")");
-  let source: string;
-  if (plans.length === 1) source = operator.token + " " + sources[0];
-  else source = sources[0] + " " + operator.token + " " + sources[1];
-  let slotOffset = 0;
-  let sourceOffset = 1;
-  if (plans.length === 1) sourceOffset += operator.token.length + 1;
-  const references: Reference[] = [];
-  const operands: Node[] = [];
-  const clone = (node: Node): Node => {
-    const base = {
-      ...node,
-      start: node.start + sourceOffset,
-      end: node.end + sourceOffset,
-    };
-    if (node.kind === "reference") {
-      const ref = {
-        ...base,
-        kind: "reference",
-        slot: node.slot + slotOffset,
-      } as Reference;
-      references.push(ref);
-      return ref;
-    }
-    if (node.kind === "literal") return base as Literal;
-    const children = node.operands.map(clone);
-    if (node.kind === "function") {
-      return { ...base, operands: children } as Call;
-    }
-    return {
-      ...base,
-      operands: children,
-      operatorSpan: {
-        start: node.operatorSpan.start + sourceOffset,
-        end: node.operatorSpan.end + sourceOffset,
-      },
-    } as Operation;
-  };
-  for (const plan of plans) {
-    operands.push(clone(plan.root));
-    slotOffset += plan.argumentCount;
-    sourceOffset += plan.source.length + operator.token.length + 4;
-  }
-  let opStart = 0;
-  if (plans.length === 2) opStart = sources[0].length + 1;
-  const root: Operation = {
-    kind: "operator",
-    operator: Object.freeze(operator),
-    operands,
-    operatorSpan: { start: opStart, end: opStart + operator.token.length },
-    start: 0,
-    end: source.length,
-    height: Math.max(...operands.map((n) => n.height)) + 1,
-  };
-  if (root.height > MAX_DEPTH) {
-    throw failure(
-      "limit",
-      "expression exceeds maximum tree depth of " + MAX_DEPTH,
-      source,
-      root,
-    );
-  }
-  return {
-    source,
-    root,
-    references,
-    argumentCount: slotOffset,
-    composed: true,
-  };
-}
-
 /** One vocabulary suggestion replacing a source range. */
 export interface Completion {
   /** Suggested vocabulary token. */
@@ -809,6 +660,62 @@ export interface Completion {
   readonly end: number;
 }
 
+interface Suggestion {
+  text: string;
+  kind: "operator" | "value";
+  order: number;
+  operator?: TokenOperators;
+}
+const completionVocabularies = new WeakMap<Grammar, readonly Suggestion[]>();
+
+function vocabulary(grammar: Grammar): readonly Suggestion[] {
+  const known = completionVocabularies.get(grammar);
+  if (known !== undefined) return known;
+  const entries: Suggestion[] = [];
+  const descriptors = new Map<string, TokenOperators>();
+  for (const bucket of grammar.buckets.values()) {
+    for (const entry of bucket) descriptors.set(entry.token, entry);
+  }
+  for (const text of grammar.tokens.toSorted((a, b) => b.length - a.length)) {
+    const operator = descriptors.get(text)!;
+    entries.push({ text, kind: "operator", order: entries.length, operator });
+  }
+  for (const text of Object.keys(grammar.values)) {
+    entries.push({ text, kind: "value", order: entries.length });
+  }
+  entries.sort((a, b) => {
+    if (a.text < b.text) return -1;
+    if (a.text > b.text) return 1;
+    return 0;
+  });
+  completionVocabularies.set(grammar, entries);
+  return entries;
+}
+
+// Inserting an operator first visits the innermost pending precedence boundary.
+function accepts_binary(
+  context: NonNullable<Parser["completionNode"]>,
+  candidate: RuntimeOperator,
+): boolean {
+  const path: RuntimeOperator[] = [];
+  let node = context.node;
+  let grouped = context.grouped;
+  while (!grouped && node.kind === "operator") {
+    path.push(node.operator);
+    node = node.operands[node.operands.length - 1];
+    grouped = node.grouped === true;
+  }
+  const next = candidate.definition;
+  for (let index = path.length - 1; index >= 0; index--) {
+    const previous = path[index].definition;
+    if (next.precedence > previous.precedence) return true;
+    if (next.precedence < previous.precedence || previous.arity === 1) continue;
+    if (next.arity !== 2) return false;
+    return next.direction === previous.direction && next.direction !== "none";
+  }
+  return true;
+}
+
 export function completions(
   grammar: Grammar,
   source: string,
@@ -817,6 +724,7 @@ export function completions(
   if (!Number.isInteger(cursor) || cursor < 0 || cursor > source.length) {
     throw new RangeError("completion cursor is outside the expression");
   }
+  if (cursor > 100_000) return [];
   const before = source.slice(0, cursor);
   const match = /(?:[A-Za-z_$][A-Za-z0-9_$]*|[!#$%&*+./:<=>@\\^|~-]+)$/.exec(
     before,
@@ -843,21 +751,62 @@ export function completions(
     prefix = match[0];
     start -= prefix.length;
   }
-  const candidates: Completion[] = [];
-  for (const text of [...grammar.tokens, ...Object.keys(grammar.values)]) {
-    if (!text.startsWith(prefix)) continue;
-    let kind: "operator" | "value" = "value";
-    if (Object.hasOwn(grammar.operators, text)) kind = "operator";
-    const candidate = source.slice(0, start) + text;
-    let valid = false;
-    for (const suffix of ["", " ?"]) {
-      try {
-        compile(grammar, candidate + suffix + ")".repeat(depth));
-        valid = true;
-        break;
-      } catch { /* An incomplete candidate is not a suggestion. */ }
-    }
-    if (valid) candidates.push({ text, kind, start, end: cursor });
+  const head = source.slice(0, start);
+  const closing = ")".repeat(depth);
+  const parser = new Parser(grammar, head + closing, start);
+  let complete = false;
+  try {
+    parser.expression();
+    parser.skip();
+    complete = parser.index === parser.source.length;
+  } catch { /* Missing operands identify the next grammatical position. */ }
+  const entries = vocabulary(grammar);
+  let low = 0;
+  let high = entries.length;
+  while (low < high) {
+    const middle = (low + high) >>> 1;
+    if (entries[middle].text < prefix) low = middle + 1;
+    else high = middle;
   }
-  return candidates;
+  const accepted: Suggestion[] = [];
+  const operatorValue = parser.needsValue && head.trimEnd().endsWith("(");
+  for (let index = low; index < entries.length; index++) {
+    const entry = entries[index];
+    if (!entry.text.startsWith(prefix)) break;
+    let valid = false;
+    if (entry.operator === undefined) {
+      valid = parser.needsValue || parser.acceptsWord;
+    } else if (operatorValue) valid = true;
+    else if (parser.needsValue) valid = entry.operator.unary !== undefined;
+    else if (
+      complete && entry.operator.binary !== undefined &&
+      parser.completionNode !== undefined
+    ) {
+      valid = accepts_binary(parser.completionNode, entry.operator.binary);
+    } else if (parser.acceptsWord && entry.operator.word) valid = true;
+    // Long sources retain the parser's exact depth/length bounds. Unusual tokens
+    // can also be parsed as shorter operators or numeric/function arguments.
+    const unusual = entry.operator !== undefined && !entry.operator.word &&
+      grammar.buckets.get(entry.text[0])!.some((other) =>
+        other.token !== entry.text && entry.text.startsWith(other.token)
+      );
+    if (
+      !complete || head.length > 256 || head.endsWith("?") || unusual ||
+      (entry.operator !== undefined && scan(number, entry.text, 0) !== null) ||
+      (parser.acceptsWord && !entry.operator?.word &&
+        entry.operator !== undefined)
+    ) {
+      valid = false;
+      for (const suffix of ["", " ?"]) {
+        try {
+          compile(grammar, head + entry.text + suffix + closing);
+          valid = true;
+          break;
+        } catch { /* Keep exact behavior for uncommon lexical ambiguities. */ }
+      }
+    }
+    if (valid) accepted.push(entry);
+  }
+  accepted.sort((a, b) => a.order - b.order);
+  return accepted.map(({ text, kind }) => ({ text, kind, start, end: cursor }));
 }

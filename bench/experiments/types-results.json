@@ -1,0 +1,833 @@
+{
+  "schema_version": 1,
+  "purpose": "Type-performance experiments for hills 4,5,11-18. Deterministic compiler-instantiation evidence; not an integrated runtime qualification.",
+  "reference_revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+  "toolchain": {
+    "deno": "2.9.7",
+    "v8": "15.0.245.2-rusty",
+    "typescript": "6.0.3"
+  },
+  "target": "x86_64-unknown-linux-gnu",
+  "unchanged_combined_workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+  "combined_workload_preserved_byte_for_byte": true,
+  "final_expression_types_sha256": "e1c51f6536e92f51052aa4961ef9f865631e95c85aade7a1dfc02162afe44e91",
+  "final_pinned_source_sha256": "992945b31eee48fa0bbc25de6442ee62c4a8f24f8193264ade4ddda705dac82f",
+  "methods": {
+    "compiler_command": [
+      "deno",
+      "check",
+      "--config",
+      "bench/type_config.json",
+      "--reload",
+      "--log-level=debug",
+      "<generated workload>"
+    ],
+    "benchmark_command": [
+      "deno",
+      "run",
+      "--no-check",
+      "--allow-read",
+      "--allow-write",
+      "--allow-run=deno,git",
+      "scripts/type_bench.ts",
+      "<report.json>",
+      "",
+      "1",
+      "<combined|valid|invalid|placeholders>"
+    ],
+    "sample_count": 1,
+    "primary_metric": "Instantiations parsed from Deno compiler diagnostics; deterministic for the pinned source, toolchain and workload.",
+    "isolation": "Baseline, final, category and later experiments ran in a copy of reference revision 4b22c07 with only the type lane variant installed. Early word/longest measurements used the shared checkout with the benchmark source-fingerprint stability guard.",
+    "scheduling": "Several runs inherited SCHED_IDLE despite chrt. Later runs normalized only their own process descendants and threads to SCHED_OTHER; reports retain scheduling observations when captured.",
+    "timing_limit": "Single-sample wall times are diagnostic only and are not a performance claim. Scheduling varied between experiments.",
+    "fingerprints": "Each retained report includes its own implementation and workload fingerprints. Final pinned source hash belongs to the isolated reference copy, not the later integrated runtime source.",
+    "workload_counts": "The combined workload contains 24 generated trees and 99 public calls. Legacy reports labeled expressions=24; final reports count actual public calls. Generated source bytes and workload hash are identical.",
+    "placeholder_scaling": {
+      "anonymous_widths": [
+        4,
+        8,
+        16,
+        32
+      ],
+      "repeated_named_widths": [
+        4,
+        8,
+        16,
+        32
+      ],
+      "distinct_named_widths": [
+        4,
+        8,
+        16,
+        32
+      ],
+      "sparse_indices": [
+        1,
+        10,
+        50,
+        99
+      ]
+    }
+  },
+  "summary": {
+    "before_report": "baseline",
+    "after_report": "final",
+    "before_instantiations": 624544,
+    "after_instantiations": 542494,
+    "delta_instantiations": -82050,
+    "reduction_percent": 13.1376
+  },
+  "categories": {
+    "valid": {
+      "before_report": "before_valid",
+      "after_report": "final_valid",
+      "before_instantiations": 189116,
+      "after_instantiations": 158646,
+      "delta_instantiations": -30470,
+      "reduction_percent": 16.1118
+    },
+    "invalid": {
+      "before_report": "before_invalid",
+      "after_report": "final_invalid",
+      "before_instantiations": 481519,
+      "after_instantiations": 411746,
+      "delta_instantiations": -69773,
+      "reduction_percent": 14.4902
+    },
+    "placeholders": {
+      "before_report": "before_placeholders",
+      "after_report": "final_placeholders",
+      "before_instantiations": 213380,
+      "after_instantiations": 163667,
+      "delta_instantiations": -49713,
+      "reduction_percent": 23.2979
+    }
+  },
+  "accepted_steps": [
+    {
+      "hills": [
+        4
+      ],
+      "change": "Skip symbolic operator matching on impossible word characters",
+      "before_report": "baseline",
+      "after_report": "word_guard",
+      "before_instantiations": 624544,
+      "after_instantiations": 624303,
+      "delta_instantiations": -241,
+      "reduction_percent": 0.0386
+    },
+    {
+      "hills": [
+        5
+      ],
+      "change": "Select the longest shared source prefix without pairwise candidate comparisons",
+      "before_report": "word_guard",
+      "after_report": "prefix_longest",
+      "before_instantiations": 624303,
+      "after_instantiations": 623739,
+      "delta_instantiations": -564,
+      "reduction_percent": 0.0903
+    },
+    {
+      "hills": [
+        5
+      ],
+      "change": "Use mapped operator candidate keys",
+      "before_report": "prefix_longest",
+      "after_report": "mapped_candidates",
+      "before_instantiations": 623739,
+      "after_instantiations": 618926,
+      "delta_instantiations": -4813,
+      "reduction_percent": 0.7716
+    },
+    {
+      "hills": [
+        12,
+        13
+      ],
+      "change": "Fold named, indexed and anonymous bindings once; read sparse indices from the resulting map",
+      "before_report": "mapped_candidates",
+      "after_report": "binding_fold",
+      "before_instantiations": 618926,
+      "after_instantiations": 617864,
+      "delta_instantiations": -1062,
+      "reduction_percent": 0.1716
+    },
+    {
+      "hills": [
+        16
+      ],
+      "change": "Replace copied token tuples with a shallow linked stream",
+      "before_report": "binding_fold",
+      "after_report": "linked_tokens",
+      "before_instantiations": 617864,
+      "after_instantiations": 582934,
+      "delta_instantiations": -34930,
+      "reduction_percent": 5.6533
+    },
+    {
+      "hills": [
+        4,
+        5
+      ],
+      "change": "Restrict operator candidate keys by the next source character",
+      "before_report": "linked_tokens",
+      "after_report": "input_character_candidates",
+      "before_instantiations": 582934,
+      "after_instantiations": 542489,
+      "delta_instantiations": -40445,
+      "reduction_percent": 6.9382
+    },
+    {
+      "hills": [
+        12,
+        13
+      ],
+      "change": "Use lint-compliant empty record seeds and format final source",
+      "before_report": "input_character_candidates",
+      "after_report": "final",
+      "before_instantiations": 542489,
+      "after_instantiations": 542494,
+      "delta_instantiations": 5,
+      "reduction_percent": -0.0009
+    }
+  ],
+  "rejected_variants": [
+    {
+      "hills": [
+        11
+      ],
+      "variant": "Validated precedence counter",
+      "reason": "Saving 56 instantiations did not justify extra range-validation machinery; unvalidated counters changed fractional and out-of-range behavior.",
+      "before_report": "prefix_longest",
+      "after_report": "precedence_counter",
+      "before_instantiations": 623739,
+      "after_instantiations": 623683,
+      "delta_instantiations": -56,
+      "reduction_percent": 0.009
+    },
+    {
+      "hills": [
+        11
+      ],
+      "variant": "Simplified magnitude tuple comparison",
+      "reason": "More compiler work than the existing cached magnitude implementation.",
+      "before_report": "linked_tokens",
+      "after_report": "precedence_tuples",
+      "before_instantiations": 582934,
+      "after_instantiations": 583202,
+      "delta_instantiations": 268,
+      "reduction_percent": -0.046
+    },
+    {
+      "hills": [
+        14
+      ],
+      "variant": "Immutable hole constraint tree",
+      "reason": "Added tree traversal machinery and regressed both measured workloads.",
+      "comparisons": [
+        {
+          "before_report": "linked_tokens",
+          "after_report": "hole_tree",
+          "before_instantiations": 582934,
+          "after_instantiations": 583234,
+          "delta_instantiations": 300,
+          "reduction_percent": -0.0515
+        },
+        {
+          "before_report": "placeholder_linked",
+          "after_report": "placeholder_hole_tree",
+          "before_instantiations": 175689,
+          "after_instantiations": 178773,
+          "delta_instantiations": 3084,
+          "reduction_percent": -1.7554
+        }
+      ]
+    },
+    {
+      "hills": [
+        15
+      ],
+      "variant": "Additional analysis projectors and a shared interpreter return helper",
+      "reason": "Existing Analyze already shares the expensive analysis; the 255-instantiation saving did not justify extra helper APIs and code.",
+      "before_report": "linked_tokens",
+      "after_report": "projection_helper",
+      "before_instantiations": 582934,
+      "after_instantiations": 582679,
+      "delta_instantiations": -255,
+      "reduction_percent": 0.0437
+    },
+    {
+      "hills": [
+        17
+      ],
+      "variant": "Bypass suffix relexing when the suffix exactly names a registered operator",
+      "reason": "The existing Lex result is cached; the extra shortcut increased compiler work.",
+      "workload": "17 arity-splitting cases: binary widths 1,2,4,8,16,32,64 and prefix depths 1 through 10.",
+      "before_instantiations": 123407,
+      "after_instantiations": 126261,
+      "delta_instantiations": 2854,
+      "workload_sha256": "650f47325e04d8a600a887fa499cdbce13876813b30bfd97af19e99720ea0911",
+      "workload_source": "import { interpreter, op } from \"./mod.ts\";\nconst binary = interpreter({ \"+\": op(\"infixl 1 ?\", (left: number, right: number) => left + right), \"++\": op(\"prefix 2 ?\", (value: number) => value) });\nconst unary = interpreter({ \"+\": op(\"prefix 2 ?\", (value: number) => value), \"++\": op(\"infixl 1 ?\", (left: number, right: number) => left + right) });\nconst b1: number = binary(\"1++1\");\nconst b2: number = binary(\"1++1++1\");\nconst b4: number = binary(\"1++1++1++1++1\");\nconst b8: number = binary(\"1++1++1++1++1++1++1++1++1\");\nconst b16: number = binary(\"1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1\");\nconst b32: number = binary(\"1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1\");\nconst b64: number = binary(\"1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1++1\");\nconst u1: number = unary(\"++1\");\nconst u2: number = unary(\"++++1\");\nconst u3: number = unary(\"++++++1\");\nconst u4: number = unary(\"++++++++1\");\nconst u5: number = unary(\"++++++++++1\");\nconst u6: number = unary(\"++++++++++++1\");\nconst u7: number = unary(\"++++++++++++++1\");\nconst u8: number = unary(\"++++++++++++++++1\");\nconst u9: number = unary(\"++++++++++++++++++1\");\nconst u10: number = unary(\"++++++++++++++++++++1\");\n"
+    },
+    {
+      "hills": [
+        4,
+        5
+      ],
+      "variant": "Infer and retain operator and prefix matches as local type parameters",
+      "reason": "The existing aliases are already cached; extra inference increased compiler work.",
+      "before_report": "input_character_candidates",
+      "after_report": "matched_locals",
+      "before_instantiations": 542489,
+      "after_instantiations": 545535,
+      "delta_instantiations": 3046,
+      "reduction_percent": -0.5615
+    },
+    {
+      "hills": [
+        16
+      ],
+      "variant": "Recursively constrained linked token tails",
+      "reason": "TypeScript reported excessive stack depth on the existing long-chain and nesting tests. The accepted stream constrains each tail only when traversed.",
+      "diagnostics": [
+        "TS2321 excessive stack depth comparing linked token types with TokenStream",
+        "TS2589 type instantiation excessively deep in TokenReferences"
+      ],
+      "measurement": "Rejected on correctness; no successful count recorded."
+    }
+  ],
+  "verification": {
+    "focused_expression_type_tests_passed": 16,
+    "format_and_lint": "Passed for src/expression_types.ts, src/expression_types.test.ts, scripts/type_workload.ts and scripts/type_bench.ts.",
+    "exact_boundaries": {
+      "source_characters": {
+        "inferred": 511,
+        "deferred": 512
+      },
+      "tokens": {
+        "inferred": 255,
+        "deferred": 256
+      },
+      "nested_groups": {
+        "inferred": 23,
+        "deferred": 24
+      },
+      "indexed_arguments": {
+        "last_exact_index": 99,
+        "first_fallback_index": 100
+      }
+    },
+    "constraint_checks": [
+      "Repeated named and indexed values preserve intersections of union constraints",
+      "Anonymous argument order",
+      "Mixed indexed and anonymous arguments",
+      "Punctuation operators embedded in identifier text",
+      "Existing longest-token, arity-splitting, numeric and word-prefix behavior"
+    ],
+    "source_scope": "Only src/expression_types.ts, src/expression_types.test.ts, scripts/type_workload.ts and scripts/type_bench.ts changed in the type lane; interpreter.ts unchanged."
+  },
+  "reports": {
+    "baseline": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "777de7330c4ac0b9d07a27dbd9c3b992398aab9d92c93dae48018629aa7110e4",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "workload_category": "combined",
+      "expressions": 99,
+      "samples_ms": [
+        2333.628413
+      ],
+      "median_ms": 2333.628413,
+      "instantiations": 624544
+    },
+    "word_guard": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "9ffa87ea25b94c52f60feba3a84d7d08256ac7ebf0afc04a31cfccc63d7e7cfc",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "expressions": 24,
+      "samples_ms": [
+        2288.054418
+      ],
+      "median_ms": 2288.054418,
+      "instantiations": 624303
+    },
+    "prefix_longest": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "ff7daa229d43fd62494c03dd15f944fcb725fb7d03c528cf38359914685f72b8",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "expressions": 24,
+      "samples_ms": [
+        2544.663288
+      ],
+      "median_ms": 2544.663288,
+      "instantiations": 623739
+    },
+    "mapped_candidates": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "482accfd5b56d3383e8334a1961b8c525739a5472f0ae8f1fa6d64a22ca91679",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "expressions": 24,
+      "samples_ms": [
+        3276.75349
+      ],
+      "median_ms": 3276.75349,
+      "instantiations": 618926
+    },
+    "binding_fold": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "2f91415bd9f3795d22f1da6f147bf1d4903ec8eefd9e16ea6d8f858bc4b054c5",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "expressions": 24,
+      "samples_ms": [
+        2057.431786
+      ],
+      "median_ms": 2057.431786,
+      "instantiations": 617864
+    },
+    "linked_tokens": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "5cb13e2f10a8849b892a012648b08b0c3054090b903a329f6582535273805389",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "workload_category": "combined",
+      "expressions": 99,
+      "samples_ms": [
+        1848.7420730000001
+      ],
+      "median_ms": 1848.7420730000001,
+      "instantiations": 582934
+    },
+    "input_character_candidates": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "a9956a02487539b2f4506d4d5c3c6e7c8299e70850abb57920c5c12eb20dc021",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "workload_category": "combined",
+      "expressions": 99,
+      "samples_ms": [
+        1989.646539
+      ],
+      "median_ms": 1989.646539,
+      "instantiations": 542489,
+      "scheduling": {
+        "requested": "SCHED_OTHER",
+        "observed_before_normalization": {
+          "SCHED_OTHER": 721,
+          "SCHED_IDLE": 3
+        },
+        "normalizations": 3,
+        "poll_ms": 50,
+        "scope": "only this benchmark process and its own descendants/threads"
+      }
+    },
+    "final": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "992945b31eee48fa0bbc25de6442ee62c4a8f24f8193264ade4ddda705dac82f",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "workload_category": "combined",
+      "expressions": 99,
+      "samples_ms": [
+        2453.31691
+      ],
+      "median_ms": 2453.31691,
+      "instantiations": 542494,
+      "scheduling": {
+        "requested": "SCHED_OTHER",
+        "observed_before_normalization": {
+          "SCHED_OTHER": 900,
+          "SCHED_IDLE": 3
+        },
+        "normalizations": 3,
+        "poll_ms": 50,
+        "scope": "only this benchmark process and its own descendants/threads"
+      }
+    },
+    "precedence_counter": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "10183afbfaa3d0e3ebcdd585a21386ac1debce78b320097555c499234510789d",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "expressions": 24,
+      "samples_ms": [
+        1960.2685319999998
+      ],
+      "median_ms": 1960.2685319999998,
+      "instantiations": 623683
+    },
+    "precedence_tuples": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "8ce8125c834c8bc5dc05b4ff28977d23d7ceb778b6b5476d042a44967cf7848a",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "workload_category": "combined",
+      "expressions": 99,
+      "samples_ms": [
+        2515.9394939999997
+      ],
+      "median_ms": 2515.9394939999997,
+      "instantiations": 583202,
+      "scheduling": {
+        "requested": "SCHED_OTHER",
+        "observed_before_normalization": {
+          "SCHED_OTHER": 930,
+          "SCHED_IDLE": 3
+        },
+        "normalizations": 3,
+        "poll_ms": 50,
+        "scope": "only this benchmark process and its own descendants/threads"
+      }
+    },
+    "hole_tree": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "7ee1020f0f9d9efb4a89c2e3f6448a768cb1e948a75c908eae9d0ec721f9fb82",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "workload_category": "combined",
+      "expressions": 99,
+      "samples_ms": [
+        38780.707388999996
+      ],
+      "median_ms": 38780.707388999996,
+      "instantiations": 583234
+    },
+    "projection_helper": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "53eb72bb83ceed4aaee4472aa5d1746d282630430f2c27a17810d22025809e8d",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "workload_category": "combined",
+      "expressions": 99,
+      "samples_ms": [
+        21856.986001
+      ],
+      "median_ms": 21856.986001,
+      "instantiations": 582679,
+      "scheduling": {
+        "requested": "SCHED_OTHER",
+        "observed_before_normalization": {
+          "SCHED_OTHER": 6237,
+          "SCHED_IDLE": 6
+        },
+        "normalizations": 6,
+        "poll_ms": 50,
+        "scope": "only this benchmark process and its own descendants/threads"
+      }
+    },
+    "matched_locals": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "6a1c459686898dc3aada6037e16543d2e26189250f8ce83e2d552fdfac5ae37e",
+      "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+      "workload_category": "combined",
+      "expressions": 99,
+      "samples_ms": [
+        13477.084368
+      ],
+      "median_ms": 13477.084368,
+      "instantiations": 545535,
+      "scheduling": {
+        "requested": "SCHED_OTHER",
+        "observed_before_normalization": {
+          "SCHED_OTHER": 4653,
+          "SCHED_IDLE": 3
+        },
+        "normalizations": 3,
+        "poll_ms": 50,
+        "scope": "only this benchmark process and its own descendants/threads"
+      }
+    },
+    "placeholder_binding_fold": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "2f91415bd9f3795d22f1da6f147bf1d4903ec8eefd9e16ea6d8f858bc4b054c5",
+      "workload_sha256": "29aa616a22f527510a24b8bb33aa957478dcf74acec52ef74e6c1150b041469b",
+      "workload_category": "placeholders",
+      "expressions": 16,
+      "samples_ms": [
+        1000.866506
+      ],
+      "median_ms": 1000.866506,
+      "instantiations": 188470
+    },
+    "placeholder_linked": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "5cb13e2f10a8849b892a012648b08b0c3054090b903a329f6582535273805389",
+      "workload_sha256": "29aa616a22f527510a24b8bb33aa957478dcf74acec52ef74e6c1150b041469b",
+      "workload_category": "placeholders",
+      "expressions": 16,
+      "samples_ms": [
+        994.031983
+      ],
+      "median_ms": 994.031983,
+      "instantiations": 175689
+    },
+    "placeholder_hole_tree": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "7ee1020f0f9d9efb4a89c2e3f6448a768cb1e948a75c908eae9d0ec721f9fb82",
+      "workload_sha256": "29aa616a22f527510a24b8bb33aa957478dcf74acec52ef74e6c1150b041469b",
+      "workload_category": "placeholders",
+      "expressions": 16,
+      "samples_ms": [
+        16885.559886
+      ],
+      "median_ms": 16885.559886,
+      "instantiations": 178773
+    },
+    "before_valid": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "777de7330c4ac0b9d07a27dbd9c3b992398aab9d92c93dae48018629aa7110e4",
+      "workload_sha256": "667917730073e3b400a327326b8100310002ca464e651e1f165e5829a490edeb",
+      "workload_category": "valid",
+      "expressions": 24,
+      "samples_ms": [
+        1255.6573839999999
+      ],
+      "median_ms": 1255.6573839999999,
+      "instantiations": 189116,
+      "scheduling": {
+        "requested": "SCHED_OTHER",
+        "observed_before_normalization": {
+          "SCHED_OTHER": 455,
+          "SCHED_IDLE": 3
+        },
+        "normalizations": 3,
+        "poll_ms": 50,
+        "scope": "only this benchmark process and its own descendants/threads"
+      }
+    },
+    "before_invalid": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "777de7330c4ac0b9d07a27dbd9c3b992398aab9d92c93dae48018629aa7110e4",
+      "workload_sha256": "ca3df50c2900e11b339d801e65ceddf8e503e3714104f564f4686fae95e9394a",
+      "workload_category": "invalid",
+      "expressions": 72,
+      "samples_ms": [
+        1807.461848
+      ],
+      "median_ms": 1807.461848,
+      "instantiations": 481519,
+      "scheduling": {
+        "requested": "SCHED_OTHER",
+        "observed_before_normalization": {
+          "SCHED_OTHER": 663,
+          "SCHED_IDLE": 3
+        },
+        "normalizations": 3,
+        "poll_ms": 50,
+        "scope": "only this benchmark process and its own descendants/threads"
+      }
+    },
+    "before_placeholders": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "777de7330c4ac0b9d07a27dbd9c3b992398aab9d92c93dae48018629aa7110e4",
+      "workload_sha256": "29aa616a22f527510a24b8bb33aa957478dcf74acec52ef74e6c1150b041469b",
+      "workload_category": "placeholders",
+      "expressions": 16,
+      "samples_ms": [
+        1141.3150190000001
+      ],
+      "median_ms": 1141.3150190000001,
+      "instantiations": 213380,
+      "scheduling": {
+        "requested": "SCHED_OTHER",
+        "observed_before_normalization": {
+          "SCHED_OTHER": 406,
+          "SCHED_IDLE": 3
+        },
+        "normalizations": 3,
+        "poll_ms": 50,
+        "scope": "only this benchmark process and its own descendants/threads"
+      }
+    },
+    "final_valid": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "992945b31eee48fa0bbc25de6442ee62c4a8f24f8193264ade4ddda705dac82f",
+      "workload_sha256": "667917730073e3b400a327326b8100310002ca464e651e1f165e5829a490edeb",
+      "workload_category": "valid",
+      "expressions": 24,
+      "samples_ms": [
+        1102.216478
+      ],
+      "median_ms": 1102.216478,
+      "instantiations": 158646,
+      "scheduling": {
+        "requested": "SCHED_OTHER",
+        "observed_before_normalization": {
+          "SCHED_OTHER": 398,
+          "SCHED_IDLE": 3
+        },
+        "normalizations": 3,
+        "poll_ms": 50,
+        "scope": "only this benchmark process and its own descendants/threads"
+      }
+    },
+    "final_invalid": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "992945b31eee48fa0bbc25de6442ee62c4a8f24f8193264ade4ddda705dac82f",
+      "workload_sha256": "ca3df50c2900e11b339d801e65ceddf8e503e3714104f564f4686fae95e9394a",
+      "workload_category": "invalid",
+      "expressions": 72,
+      "samples_ms": [
+        1921.831866
+      ],
+      "median_ms": 1921.831866,
+      "instantiations": 411746,
+      "scheduling": {
+        "requested": "SCHED_OTHER",
+        "observed_before_normalization": {
+          "SCHED_OTHER": 702,
+          "SCHED_IDLE": 3
+        },
+        "normalizations": 3,
+        "poll_ms": 50,
+        "scope": "only this benchmark process and its own descendants/threads"
+      }
+    },
+    "final_placeholders": {
+      "version": {
+        "deno": "2.9.7",
+        "v8": "15.0.245.2-rusty",
+        "typescript": "6.0.3"
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "revision": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+      "source_sha256": "992945b31eee48fa0bbc25de6442ee62c4a8f24f8193264ade4ddda705dac82f",
+      "workload_sha256": "29aa616a22f527510a24b8bb33aa957478dcf74acec52ef74e6c1150b041469b",
+      "workload_category": "placeholders",
+      "expressions": 16,
+      "samples_ms": [
+        1415.775364
+      ],
+      "median_ms": 1415.775364,
+      "instantiations": 163667,
+      "scheduling": {
+        "requested": "SCHED_OTHER",
+        "observed_before_normalization": {
+          "SCHED_OTHER": 520,
+          "SCHED_IDLE": 3
+        },
+        "normalizations": 3,
+        "poll_ms": 50,
+        "scope": "only this benchmark process and its own descendants/threads"
+      }
+    }
+  }
+}

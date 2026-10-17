@@ -2,6 +2,20 @@
 
 All notable changes to this package will be documented in this file.
 
+## Unreleased
+
+- Prepare operator descriptors and evaluator closures once; reduce repeated
+  binding checks, ordinary operand allocations, and parser suffix strings.
+- Reduce type-analysis work with operator candidate filtering, linked token
+  streams, and one binding fold. Index completion vocabulary and parse its
+  context once for ordinary suggestions.
+- Add the `./core` entry point and `fragment.explain`; share composed trees and
+  defer display text. Direct calls cache one prepared source up to 1024
+  characters.
+- Add frozen ABBA scaling, allocation/retention/GC, cold-start, LSP, watch-loop,
+  and focused benchmark tooling. Record all fifty decisions and memory tradeoffs
+  in `docs/performance.md`.
+
 ## 0.4.0 - 2026-10-17
 
 - Replaced repeated runtime parsing with compiled expression trees and bounded,

@@ -99,7 +99,8 @@ function validate_operator_registry(registry: OperatorRegistry): void {
   }
 }
 
-function validate_operator_token(token: string): void {
+/** @internal Validate a token while preparing a grammar snapshot. */
+export function validate_operator_token(token: string): void {
   if (token.length === 0) {
     throw new TypeError("operator token must not be empty");
   }
@@ -147,7 +148,8 @@ function validate_operator_entry(token: string, entry: OperatorEntry): void {
   }
 }
 
-function validate_operator_definition(
+/** @internal Validate one definition before preparing its snapshot. */
+export function validate_operator_definition(
   token: string,
   definition: OperatorDefinition,
 ): void {

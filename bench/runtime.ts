@@ -32,6 +32,8 @@ const order = { amount: 42000, risk: 0.28 };
 const arithmetic = terp("?0 + ?1 * 3");
 const raw_arithmetic = terp.raw("?0 + ?1 * 3");
 if (raw_arithmetic instanceof Error) throw raw_arithmetic;
+const lazy = terp.raw("?0 && ?1");
+if (lazy instanceof Error) throw lazy;
 const large_registry: Record<string, OperatorRegistry[string]> = {
   ...standard_operators,
 };
@@ -52,6 +54,8 @@ const cases: Record<string, () => unknown> = {
   "run/arithmetic-reused": () => arithmetic(4, 5),
   "run/arithmetic-direct": () => terp("?0 + ?1 * 3", 4, 5),
   "run/arithmetic-raw": () => raw_arithmetic(4, 5),
+  "run/lazy-evaluate": () => lazy(true, true),
+  "run/lazy-skip": () => lazy(false, true),
   "run/pricing-reused": () => price(quote),
   "run/pricing-direct": () => pricing(price_source, quote),
   "run/rules-reused": () => rule(order),
@@ -85,6 +89,13 @@ if ("checked" in terp) {
     return result.value;
   };
   cases["run/fragment-typed"] = () => left.run(4);
+  if ("explain" in left && typeof left.explain === "function") {
+    cases["run/fragment-explain"] = () => {
+      const result = left.explain(4);
+      if (result instanceof Error) throw result;
+      return result.value;
+    };
+  }
   cases["run/composed-independent"] = () => combined.run(4, 5);
   cases["run/composed-template"] = () => template(4);
   cases["complete/operator-prefix"] = () => terp.complete("1 + ");
@@ -99,9 +110,12 @@ export function validate_runtime_cases(): void {
     "run/arithmetic-reused": 19,
     "run/arithmetic-direct": 19,
     "run/arithmetic-raw": 19,
+    "run/lazy-evaluate": true,
+    "run/lazy-skip": false,
     "run/arithmetic-checked": 19,
     "run/arithmetic-explain": 19,
     "run/fragment-typed": 5,
+    "run/fragment-explain": 5,
     "run/composed-independent": 15,
     "run/composed-template": 13,
     "run/pricing-reused": 5310,

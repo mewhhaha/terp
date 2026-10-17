@@ -1,0 +1,255 @@
+{
+  "method": "interleaved before/current/current/before; two independent processes and ten samples per side; CPU and wall median ratios; full sample spread retained",
+  "version": {
+    "deno": "2.9.7",
+    "v8": "15.0.245.2-rusty",
+    "typescript": "6.0.3"
+  },
+  "target": "x86_64-unknown-linux-gnu",
+  "host": {
+    "hostname": "cachyos-x8664",
+    "os_release": "7.2.9-2-cachyos",
+    "cpu": "AMD Ryzen 7 3800X 8-Core Processor",
+    "logical_cpus": 16,
+    "cpu_affinity": "0-15",
+    "scheduling_policy": "0"
+  },
+  "workload_sha256": "ed227b3f32682c63ab40e10c0574d1688d4c613ad7f357ca442c16cf1c7efab4",
+  "before_source_sha256": "777de7330c4ac0b9d07a27dbd9c3b992398aab9d92c93dae48018629aa7110e4",
+  "eager_source_sha256": "9221764c2183f132b402616061c07a9f132c944e60df0fb3a94e9c31895d3343",
+  "note": "Superseded eager preparation capture. Short 20ms warmup produced wide setup CPU spread; final setup uses 100ms warmup. Kept to explain lazy ordinary-preparation adoption.",
+  "runtime": {
+    "construct/small": {
+      "before_cpu_ns": 15178.403755868545,
+      "current_cpu_ns": 21250.598563447726,
+      "cpu_ratio": 1.400054900715857,
+      "before_wall_ns": 11379.807947019857,
+      "current_wall_ns": 14633.971389645767,
+      "wall_ratio": 1.2859594342695484,
+      "before_cpu_range_ns": [
+        6956.91140985867,
+        26244.553759662685
+      ],
+      "current_cpu_range_ns": [
+        13411.434405308832,
+        43474.124809741246
+      ]
+    },
+    "construct/large-100": {
+      "before_cpu_ns": 141517.24137931035,
+      "current_cpu_ns": 165816.5680473373,
+      "cpu_ratio": 1.1717057683656875,
+      "before_wall_ns": 141237.46896551724,
+      "current_wall_ns": 119085.50520833336,
+      "wall_ratio": 0.8431580237210834,
+      "before_cpu_range_ns": [
+        91995.55555555556,
+        152742.42424242425
+      ],
+      "current_cpu_range_ns": [
+        69232.0819112628,
+        284658.1196581197
+      ]
+    },
+    "raw/arithmetic": {
+      "before_cpu_ns": 3266.043766904352,
+      "current_cpu_ns": 6072.521382965908,
+      "cpu_ratio": 1.8592896532803092,
+      "before_wall_ns": 2306.455809677047,
+      "current_wall_ns": 3571.0005356186384,
+      "wall_ratio": 1.5482631493029362,
+      "before_cpu_range_ns": [
+        1563.7547476939772,
+        5166.854143232096
+      ],
+      "current_cpu_range_ns": [
+        2355.840489354194,
+        10549.527865210146
+      ]
+    },
+    "run/arithmetic-reused": {
+      "before_cpu_ns": 348.63265911589673,
+      "current_cpu_ns": 119.24479494134766,
+      "cpu_ratio": 0.34203564073355175,
+      "before_wall_ns": 349.23008324462154,
+      "current_wall_ns": 119.81304303567072,
+      "wall_ratio": 0.34307766937634215,
+      "before_cpu_range_ns": [
+        192.78928980471795,
+        361.0965443662863
+      ],
+      "current_cpu_range_ns": [
+        74.51488388287576,
+        161.157207865773
+      ]
+    },
+    "run/arithmetic-direct": {
+      "before_cpu_ns": 2790.1680322177476,
+      "current_cpu_ns": 131.152728063757,
+      "cpu_ratio": 0.047005315289026184,
+      "before_wall_ns": 2788.8807110123553,
+      "current_wall_ns": 131.84048226445412,
+      "wall_ratio": 0.047273618317147895,
+      "before_cpu_range_ns": [
+        1812.8997387622737,
+        3364.8104429940286
+      ],
+      "current_cpu_range_ns": [
+        82.65441356703961,
+        137.27801728569372
+      ]
+    },
+    "run/arithmetic-explain": {
+      "before_cpu_ns": 2630.7472547094007,
+      "current_cpu_ns": 4274.835141459264,
+      "cpu_ratio": 1.6249509084564164,
+      "before_wall_ns": 2519.535433070842,
+      "current_wall_ns": 4277.909380982747,
+      "wall_ratio": 1.6978960981583724,
+      "before_cpu_range_ns": [
+        1777.5418104592513,
+        3662.7624625053563
+      ],
+      "current_cpu_range_ns": [
+        2957.800323481841,
+        5543.714103382259
+      ]
+    }
+  },
+  "memory": {
+    "before": [
+      {
+        "name": "construct/small",
+        "count": 10000,
+        "warmup_count": 1000,
+        "elapsed_ms": 143.498092,
+        "allocated_bytes": 89617536,
+        "allocated_bytes_per_op": 8961.7536,
+        "retained_bytes": 25436936,
+        "released_heap_delta_bytes": -82680,
+        "forced_gc_ms": 12.265727999999996,
+        "worker_gc_events": 22,
+        "worker_gc_pause_ms": 40.6
+      },
+      {
+        "name": "construct/large-100",
+        "count": 1000,
+        "warmup_count": 1000,
+        "elapsed_ms": 135.223342,
+        "allocated_bytes": 144937648,
+        "allocated_bytes_per_op": 144937.648,
+        "retained_bytes": 23145544,
+        "released_heap_delta_bytes": -14200,
+        "forced_gc_ms": 7.061133999999981,
+        "worker_gc_events": 101,
+        "worker_gc_pause_ms": 37.78999999999999
+      },
+      {
+        "name": "raw/arithmetic",
+        "count": 10000,
+        "warmup_count": 10000,
+        "elapsed_ms": 51.649621,
+        "allocated_bytes": 40423448,
+        "allocated_bytes_per_op": 4042.3448,
+        "retained_bytes": 10548072,
+        "released_heap_delta_bytes": -91544,
+        "forced_gc_ms": 5.412188999999998,
+        "worker_gc_events": 31,
+        "worker_gc_pause_ms": 20.359999999999996
+      },
+      {
+        "name": "run/arithmetic-reused",
+        "count": 10000,
+        "warmup_count": 100000,
+        "elapsed_ms": 8.826861000000001,
+        "allocated_bytes": 12233920,
+        "allocated_bytes_per_op": 1223.392,
+        "retained_bytes": -3288,
+        "released_heap_delta_bytes": -82904,
+        "forced_gc_ms": 1.7279649999999975,
+        "worker_gc_events": 54,
+        "worker_gc_pause_ms": 7.669999999999998
+      },
+      {
+        "name": "run/pricing-reused",
+        "count": 10000,
+        "warmup_count": 100000,
+        "elapsed_ms": 13.054528000000005,
+        "allocated_bytes": 25142656,
+        "allocated_bytes_per_op": 2514.2656,
+        "retained_bytes": 9688,
+        "released_heap_delta_bytes": -69928,
+        "forced_gc_ms": 1.7643039999999957,
+        "worker_gc_events": 102,
+        "worker_gc_pause_ms": 10.439999999999998
+      }
+    ],
+    "current": [
+      {
+        "name": "construct/small",
+        "count": 10000,
+        "warmup_count": 1000,
+        "elapsed_ms": 112.67160899999999,
+        "allocated_bytes": 78730544,
+        "allocated_bytes_per_op": 7873.0544,
+        "retained_bytes": 28858488,
+        "released_heap_delta_bytes": 138872,
+        "forced_gc_ms": 12.543566999999996,
+        "worker_gc_events": 17,
+        "worker_gc_pause_ms": 41.43
+      },
+      {
+        "name": "construct/large-100",
+        "count": 1000,
+        "warmup_count": 1000,
+        "elapsed_ms": 80.198364,
+        "allocated_bytes": 97301904,
+        "allocated_bytes_per_op": 97301.904,
+        "retained_bytes": 31706296,
+        "released_heap_delta_bytes": 10680,
+        "forced_gc_ms": 11.857001999999994,
+        "worker_gc_events": 21,
+        "worker_gc_pause_ms": 44.279999999999994
+      },
+      {
+        "name": "raw/arithmetic",
+        "count": 10000,
+        "warmup_count": 10000,
+        "elapsed_ms": 69.820014,
+        "allocated_bytes": 44097560,
+        "allocated_bytes_per_op": 4409.756,
+        "retained_bytes": 28029704,
+        "released_heap_delta_bytes": -120976,
+        "forced_gc_ms": 8.842510000000004,
+        "worker_gc_events": 35,
+        "worker_gc_pause_ms": 46.49
+      },
+      {
+        "name": "run/arithmetic-reused",
+        "count": 10000,
+        "warmup_count": 100000,
+        "elapsed_ms": 1.6363210000000024,
+        "allocated_bytes": 1540400,
+        "allocated_bytes_per_op": 154.04,
+        "retained_bytes": -3992,
+        "released_heap_delta_bytes": -76128,
+        "forced_gc_ms": 1.712245000000003,
+        "worker_gc_events": 10,
+        "worker_gc_pause_ms": 7.54
+      },
+      {
+        "name": "run/pricing-reused",
+        "count": 10000,
+        "warmup_count": 100000,
+        "elapsed_ms": 2.749397000000002,
+        "allocated_bytes": 1132456,
+        "allocated_bytes_per_op": 113.2456,
+        "retained_bytes": -4080,
+        "released_heap_delta_bytes": -83696,
+        "forced_gc_ms": 1.3059130000000039,
+        "worker_gc_events": 11,
+        "worker_gc_pause_ms": 6.12
+      }
+    ]
+  }
+}

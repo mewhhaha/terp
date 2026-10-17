@@ -124,8 +124,10 @@ semantics, that interpreter's expression results are typed `unknown`. Use
 
 Direct calls and runners throw errors. `raw`, `fragment`, `combine`, `checked`
 compilation, and `explain` return them. Application exceptions retain their
-causes. Runtime strings validate syntax rather than the domains of arbitrary
-callbacks.
+causes. Synthetic compatibility causes for syntax/binding failures are created
+only when `.cause` or `.errors` is inspected. These are prototype getters; read
+them explicitly when serializing an error. Runtime strings validate syntax
+rather than the domains of arbitrary callbacks.
 
 ## Fragments
 
@@ -141,6 +143,8 @@ if (!(left instanceof Error) && !(right instanceof Error)) {
 Structural `combine` concatenates argument tuples in operand order. Each operand
 keeps its own scope object and indexed slots. Nested combinations retain those
 bindings. Incompatible operand result types fail checking.
+`fragment.explain(...args)` traces the prepared plan, including combined
+fragments; its offsets refer to the fragment display source.
 
 Tagged `raw` templates accept only source fragments from the same interpreter.
 Each interpolation is parenthesized. Named and indexed placeholders share the
@@ -181,7 +185,8 @@ Skipped lazy branches produce no steps. Application code executes exactly once.
 checks syntax using the same runtime parser, supports partial words/symbols and
 open groups, and never evaluates callbacks. Suggestions concern syntax and
 vocabulary, not erased TypeScript operand types. The optional cursor defaults to
-the end; text after the cursor is not used to qualify suggestions.
+the end; text after the cursor is not used to qualify suggestions. Prefixes over
+100000 characters yield no suggestions.
 
 ## Predictable limits
 
@@ -195,6 +200,22 @@ to `unknown` results and runtime validation, preserving compiler responsiveness.
 Long left-associative chains use iterative type recursion. Literal operator
 metadata is preserved by the supplied builders; an explicitly widened operator
 annotation can intentionally lose that information.
+
+## Preparation and reuse
+
+Import builders from `jsr:@mewhhaha/terp/core` when a custom language does not
+need the default `terp` instance. Both entry points expose the same builder
+types. Passing an existing interpreter's `.operators` reuses its immutable
+prepared table; mutable input registries are always snapshotted anew.
+
+Direct calls retain one successful prepared source of at most 1024 characters.
+This cache never stores results: callbacks and argument validation run on every
+invocation. `raw`, `checked`, and fragments explicitly prepare reusable runners;
+they do not populate that direct-call cache. Keep and reuse a runner for a hot
+expression. Prepared evaluators trade more retained memory for less execution
+work. Evaluator creation is deferred until first execution, so uncalled runners
+retain only their parsed plan and binding requirements. See the
+[performance measurements](performance.md).
 
 ## Development evidence
 

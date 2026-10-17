@@ -1,0 +1,14 @@
+{
+  "baseline": "4b22c07d9f4e7c0eb950dcf84354f2d52e0e7fdd",
+  "snapshot": "/tmp/terp-qualified-before-source",
+  "scheduling": {
+    "requested": "SCHED_OTHER",
+    "observed_before_normalization": {
+      "SCHED_OTHER": 3024,
+      "SCHED_IDLE": 18
+    },
+    "normalizations": 18,
+    "poll_ms": 50,
+    "scope": "only this benchmark process and its own descendants/threads"
+  }
+}

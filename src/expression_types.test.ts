@@ -424,3 +424,92 @@ Deno.test("operator callbacks may ignore declared operands", () => {
   const unary_result: number = unary.run();
   assert_equals([binary_result, left_result, unary_result], [42, 1, 42]);
 });
+
+type Repeat<
+  S extends string,
+  N extends number,
+  A extends readonly unknown[] = [],
+  R extends string = "",
+> = A["length"] extends N ? R : Repeat<S, N, [...A, unknown], `${R}${S}`>;
+
+Deno.test("expression type limits preserve the exact source, token and depth boundaries", () => {
+  type Source511 = `${Repeat<"                ", 31>}              1`;
+  expect<Equal<StringExpressionType<Arithmetic, Empty, Source511>, number>>();
+  expect<
+    Equal<StringExpressionType<Arithmetic, Empty, `${Source511} `>, unknown>
+  >();
+  type Tokens255 = `${Repeat<"1+", 127>}1`;
+  expect<Equal<StringExpressionType<Arithmetic, Empty, Tokens255>, number>>();
+  expect<
+    Equal<StringExpressionType<Arithmetic, Empty, `${Tokens255}+`>, unknown>
+  >();
+  expect<
+    Equal<
+      CheckedExpression<Arithmetic, Empty, Repeat<"1+", 127>>,
+      "interpreter string error: expected an operand"
+    >
+  >();
+  type Groups23 = `${Repeat<"(", 23>}1${Repeat<")", 23>}`;
+  type Groups24 = `(${Groups23})`;
+  expect<Equal<StringExpressionType<Arithmetic, Empty, Groups23>, number>>();
+  expect<Equal<StringExpressionType<Arithmetic, Empty, Groups24>, unknown>>();
+});
+
+Deno.test("binding collection preserves intersected values, sparse indices and operand order", () => {
+  type Constraints = {
+    "&": Binary<1, "left", number | string, string | boolean, boolean>;
+  };
+  expect<
+    Equal<
+      StringExpressionArgs<Constraints, Empty, "?name & ?name">,
+      readonly [{ readonly name: string }]
+    >
+  >();
+  expect<
+    Equal<
+      StringExpressionArgs<Constraints, Empty, "?0 & ?0">,
+      readonly [string]
+    >
+  >();
+  expect<
+    Equal<
+      StringExpressionArgs<Constraints, Empty, "? & ?">,
+      readonly [number | string, string | boolean]
+    >
+  >();
+  expect<
+    Equal<
+      StringExpressionArgs<Arithmetic, Empty, "?99 + ?99">[99],
+      number
+    >
+  >();
+  expect<
+    Equal<
+      StringExpressionArgs<Arithmetic, Empty, "?99 + ?99">["length"],
+      100
+    >
+  >();
+  expect<
+    Equal<
+      StringExpressionArgs<Arithmetic, Empty, "?100 + ?100">,
+      readonly unknown[]
+    >
+  >();
+  expect<
+    Equal<
+      StringExpressionArgs<Arithmetic, Empty, "?0 + ?">,
+      readonly [number, number]
+    >
+  >();
+});
+
+Deno.test("word scanning keeps punctuation operators inside registered vocabularies", () => {
+  type Word = {
+    "a!": Binary<1, "left", number, number, boolean>;
+    "!": Binary<2, "left", number, number, number>;
+  };
+  type Values = { alph: number; alpha: number; beta: number; gamma: number };
+  expect<Equal<StringExpressionType<Word, Values, "alpha!gamma">, boolean>>();
+  expect<Equal<StringExpressionType<Word, Values, "betaa!gamma">, boolean>>();
+  expect<Equal<StringExpressionType<Word, Values, "alpha ! gamma">, number>>();
+});

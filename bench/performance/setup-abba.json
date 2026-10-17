@@ -1,0 +1,148 @@
+{
+  "method": "ABBA; 100 ms warmup; 7 x 50 ms samples per process; 14 samples per side",
+  "before_source_sha256": "777de7330c4ac0b9d07a27dbd9c3b992398aab9d92c93dae48018629aa7110e4",
+  "current_source_sha256": "eb6bbf121c4e88df536134f05a73f287e87c404d7de640901d61799c68f45212",
+  "workload_sha256": "5e619806825d8b06d1682cefc3b8c524e64063ed664301e14e6c6d96f62a62a6",
+  "version": {
+    "deno": "2.9.7",
+    "v8": "15.0.245.2-rusty",
+    "typescript": "6.0.3"
+  },
+  "host": {
+    "hostname": "cachyos-x8664",
+    "os_release": "7.2.9-2-cachyos",
+    "cpu": "AMD Ryzen 7 3800X 8-Core Processor",
+    "logical_cpus": 16,
+    "cpu_affinity": "0-15",
+    "scheduling_policy": "0"
+  },
+  "cases": {
+    "construct/small": {
+      "before_cpu_ns": 6657.022440170884,
+      "current_cpu_ns": 11071.048358049968,
+      "cpu_ratio": 1.6630630972855451,
+      "before_cpu_range_ns": [
+        6409.062144032401,
+        9309.977827050998
+      ],
+      "current_cpu_range_ns": [
+        8471.468662301217,
+        17576.77576601671
+      ]
+    },
+    "construct/large-100": {
+      "before_cpu_ns": 85174.16611695873,
+      "current_cpu_ns": 113185.5044137672,
+      "cpu_ratio": 1.3288712948283414,
+      "before_cpu_range_ns": [
+        82777.77777777778,
+        90265.12455516015
+      ],
+      "current_cpu_range_ns": [
+        92634.93975903615,
+        472537.6884422111
+      ]
+    },
+    "raw/arithmetic": {
+      "before_cpu_ns": 1473.0890267933296,
+      "current_cpu_ns": 1697.867419475528,
+      "cpu_ratio": 1.1525898221993438,
+      "before_cpu_range_ns": [
+        1426.5503820914178,
+        1679.089641256936
+      ],
+      "current_cpu_range_ns": [
+        1654.8127545445516,
+        1886.6592344853213
+      ]
+    },
+    "raw/invalid": {
+      "before_cpu_ns": 15610.55024993754,
+      "current_cpu_ns": 7354.7272459932365,
+      "cpu_ratio": 0.47113824485608147,
+      "before_cpu_range_ns": [
+        14836.56103286385,
+        17698.518294526762
+      ],
+      "current_cpu_range_ns": [
+        7280.539052311259,
+        8777.794359050888
+      ]
+    },
+    "raw/large-100": {
+      "before_cpu_ns": 2338.707097067076,
+      "current_cpu_ns": 2476.8357261794968,
+      "cpu_ratio": 1.059061961750424,
+      "before_cpu_range_ns": [
+        2322.0684227582055,
+        2386.631716906946
+      ],
+      "current_cpu_range_ns": [
+        2447.674133620901,
+        2536.368712248109
+      ]
+    },
+    "raw/nesting-24": {
+      "before_cpu_ns": 7831.031072038082,
+      "current_cpu_ns": 3300.7310628619043,
+      "cpu_ratio": 0.42149380234841355,
+      "before_cpu_range_ns": [
+        7290.827416316476,
+        8514.414264289286
+      ],
+      "current_cpu_range_ns": [
+        3272.5312071106464,
+        3377.8123099790555
+      ]
+    },
+    "run/arithmetic-explain": {
+      "before_cpu_ns": 1766.498494213009,
+      "current_cpu_ns": 2248.75005630377,
+      "cpu_ratio": 1.2729985695830488,
+      "before_cpu_range_ns": [
+        1760.3592856391003,
+        1779.9010711362585
+      ],
+      "current_cpu_range_ns": [
+        2190.5618174641463,
+        2282.1332359253
+      ]
+    },
+    "construct/prepared-small": {
+      "before_cpu_ns": 8067.21534155185,
+      "current_cpu_ns": 3800.4043694464444,
+      "cpu_ratio": 0.47109246605475885,
+      "before_cpu_range_ns": [
+        7743.116443624058,
+        10263.747629719013
+      ],
+      "current_cpu_range_ns": [
+        3737.9300052234908,
+        3870.9402371909155
+      ]
+    },
+    "construct/prepared-large-100": {
+      "before_cpu_ns": 107286.78038379531,
+      "current_cpu_ns": 3727.6695768972463,
+      "cpu_ratio": 0.034744910449939055,
+      "before_cpu_range_ns": [
+        104922.59414225942,
+        111841.51785714286
+      ],
+      "current_cpu_range_ns": [
+        3686.5671641791046,
+        3767.837004736486
+      ]
+    }
+  },
+  "scheduling": {
+    "requested": "SCHED_OTHER",
+    "observed_before_normalization": {
+      "SCHED_OTHER": 3273,
+      "SCHED_IDLE": 4
+    },
+    "normalizations": 4,
+    "poll_ms": 50,
+    "scope": "only this benchmark process and its own descendants/threads"
+  }
+}

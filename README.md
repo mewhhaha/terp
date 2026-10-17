@@ -72,7 +72,11 @@ if (!(subtotal instanceof Error) && !(multiplier instanceof Error)) {
 
 `combine` preserves types and gives each fragment its own arguments. Tagged
 `raw` templates group interpolated source fragments while sharing named/indexed
-bindings. Fragments belong to the interpreter that created them.
+bindings. Fragments belong to the interpreter that created them. Use
+`fragment.explain(...args)` to trace an already prepared fragment.
+
+For custom languages, import the same builders from `jsr:@mewhhaha/terp/core` to
+skip construction of the standard interpreter.
 
 ## More
 
@@ -82,12 +86,15 @@ bindings. Fragments belong to the interpreter that created them.
   and typed parser combinators.
 - [Implementation and measurements](docs/hills.md): the forty implementation
   hills and their verification.
+- [Performance](docs/performance.md): fifty measured hills and their tradeoffs.
 
 ## Development
 
 ```sh
 deno task ci
+deno task bench:quick
 deno task bench
+deno task check:watch
 deno task types:bench
 ```
 

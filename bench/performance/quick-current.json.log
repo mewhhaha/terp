@@ -1,0 +1,5 @@
+run/arithmetic-reused               67 ns/op (CPU 67)
+run/arithmetic-direct               73 ns/op (CPU 73)
+run/arithmetic-raw                  71 ns/op (CPU 71)
+run/arithmetic-checked              75 ns/op (CPU 75)
+run/arithmetic-explain            2795 ns/op (CPU 6920)

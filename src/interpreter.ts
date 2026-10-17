@@ -10,21 +10,18 @@ import {
   type OperatorDefinition,
   type OperatorEntry,
   type OperatorRegistry,
-  operators as validate_operators,
-  standard_operators,
-  type StandardOperators,
 } from "./operators.ts";
 import {
-  combine_plans,
   compile,
   type Completion,
   completions,
-  execute,
   type InterpreterApplyOperator,
   make_grammar,
   type Plan,
   type TraceStep,
 } from "./runtime.ts";
+
+import { combine_plans, prepare_execution } from "./execution.ts";
 
 export { InterpreterError } from "./errors.ts";
 export type { InterpreterErrorCode, SourceSpan } from "./errors.ts";
@@ -62,6 +59,8 @@ export interface ExpressionFragment<
   run(...values: A): R;
   /** Return the display source. */
   toString(): string;
+  /** Explain the prepared fragment without parsing it again. */
+  explain(...values: A): Explanation | InterpreterError;
 }
 /** Fragment validation result. */
 export type ExpressionFragmentResult = ExpressionFragment | InterpreterError;
@@ -229,33 +228,59 @@ export function interpreter(
   operators: OperatorRegistry,
   options: InterpreterOptions<ValueRegistry, readonly string[]> = {},
 ): unknown {
-  validate_operators(operators);
   const grammar = make_grammar(
     operators,
     options.values ?? {},
     options.word_prefixes ?? [],
   );
   const hook = options.apply_operator;
-  const fragments = new WeakMap<ExpressionFragment, Plan>();
-  const make_fragment = (plan: Plan): ExpressionFragment => {
+  type Prepared = { plan: Plan; run: ReturnType<typeof prepare_execution> };
+  let recent: Prepared | undefined;
+  const prepare = (expression: string, cache = false): Prepared => {
+    if (cache && recent !== undefined && recent.plan.source === expression) {
+      return recent;
+    }
+    const plan = compile(grammar, expression);
+    const prepared = { plan, run: prepare_execution(plan, hook) };
+    // One small source retains a bounded plan; unique streams need no map or eviction.
+    if (cache && expression.length <= 1024) recent = prepared;
+    return prepared;
+  };
+  let fragments: WeakMap<ExpressionFragment, Plan> | undefined;
+  const make_fragment = (
+    plan: Plan,
+    run = prepare_execution(plan, hook),
+  ): ExpressionFragment => {
     const fragment: ExpressionFragment = Object.freeze({
-      expression: plan.source,
+      get expression() {
+        return plan.source;
+      },
       run(...values: unknown[]) {
-        return execute(plan, values, hook);
+        return run(values);
+      },
+      explain(...values: unknown[]) {
+        try {
+          const steps: TraceStep[] = [];
+          const value = run(values, steps);
+          return { value, steps };
+        } catch (error) {
+          return caught(error);
+        }
       },
       toString() {
         return plan.source;
       },
     });
+    if (fragments === undefined) fragments = new WeakMap();
     fragments.set(fragment, plan);
     return fragment;
   };
   const instance = (expression: string, ...values: unknown[]): unknown => {
-    const plan = compile(grammar, expression);
+    const { plan, run } = prepare(expression, true);
     if (values.length === 0 && plan.references.length > 0) {
-      return (...arguments_: unknown[]) => execute(plan, arguments_, hook);
+      return (...arguments_: unknown[]) => run(arguments_);
     }
-    return execute(plan, values, hook);
+    return run(values);
   };
   const raw = (
     expression: string | TemplateStringsArray,
@@ -277,7 +302,7 @@ export function interpreter(
         }
         let source = expression[0];
         for (let i = 0; i < parts.length; i++) {
-          const plan = fragments.get(parts[i]);
+          const plan = fragments?.get(parts[i]);
           if (plan === undefined) {
             throw failure(
               "fragment",
@@ -297,8 +322,8 @@ export function interpreter(
       if (typeof expression !== "string") {
         throw failure("fragment", "raw template expected string chunks");
       }
-      const plan = compile(grammar, expression);
-      return (...values: unknown[]) => execute(plan, values, hook);
+      const { run } = prepare(expression);
+      return (...values: unknown[]) => run(values);
     } catch (error) {
       return caught(error);
     }
@@ -319,7 +344,8 @@ export function interpreter(
     fragment: {
       value: (expression: string): ExpressionFragmentResult => {
         try {
-          return make_fragment(compile(grammar, expression));
+          const { plan, run } = prepare(expression);
+          return make_fragment(plan, run);
         } catch (error) {
           return caught(error);
         }
@@ -332,7 +358,7 @@ export function interpreter(
       ): ExpressionFragmentResult => {
         try {
           const plans = parts.map((part) => {
-            const plan = fragments.get(part);
+            const plan = fragments?.get(part);
             if (plan === undefined) {
               throw failure(
                 "fragment",
@@ -372,8 +398,12 @@ export function interpreter(
         expression: string,
         guards: ExpressionGuards<readonly unknown[], unknown>,
       ): RawStringResult => {
-        const runner = raw(expression);
-        if (runner instanceof InterpreterError) return runner;
+        let runner: ReturnType<typeof prepare_execution>;
+        try {
+          runner = prepare(expression).run;
+        } catch (error) {
+          return caught(error);
+        }
         return (...values: unknown[]) => {
           try {
             if (!guards.arguments(values)) {
@@ -383,7 +413,7 @@ export function interpreter(
                 expression,
               );
             }
-            const value = runner(...values);
+            const value = runner(values);
             if (!guards.result(value)) {
               throw failure(
                 "validation",
@@ -411,9 +441,9 @@ export function interpreter(
         ...values: readonly unknown[]
       ): Explanation | InterpreterError => {
         try {
-          const plan = compile(grammar, expression);
+          const { run } = prepare(expression);
           const steps: TraceStep[] = [];
-          const value = execute(plan, values, hook, steps);
+          const value = run(values, steps);
           return { value, steps };
         } catch (error) {
           return caught(error);
@@ -427,7 +457,3 @@ export function interpreter(
   });
   return instance;
 }
-/** Standard numeric, string, comparison, and short-circuit boolean language. */
-export const terp: Interpreter<StandardOperators> = interpreter(
-  standard_operators,
-);

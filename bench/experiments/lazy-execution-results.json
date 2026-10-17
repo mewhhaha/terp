@@ -1,0 +1,370 @@
+{
+  "summary": {
+    "timing": {
+      "eager/raw-create": {
+        "wall_ns": 1951.5518073226726,
+        "cpu_ns": 1961.0910081319794
+      },
+      "eager/raw-create-execute": {
+        "wall_ns": 2017.5838474255113,
+        "cpu_ns": 2016.128381920084
+      },
+      "eager/hot": {
+        "wall_ns": 58.154383398018894,
+        "cpu_ns": 57.97155388281707
+      },
+      "lazy/raw-create": {
+        "wall_ns": 1638.6816679213173,
+        "cpu_ns": 1645.2394200242202
+      },
+      "lazy/raw-create-execute": {
+        "wall_ns": 2007.283456988173,
+        "cpu_ns": 2005.4140765991579
+      },
+      "lazy/hot": {
+        "wall_ns": 58.690544964149,
+        "cpu_ns": 58.5222317814181
+      }
+    },
+    "first": {
+      "eager": {
+        "wall_ns": 313.69633288262185,
+        "cpu_ns": 313.44526241987177
+      },
+      "lazy": {
+        "wall_ns": 602.4254120617153,
+        "cpu_ns": 676.7220846036586
+      }
+    },
+    "memory": {
+      "eager/false": {
+        "allocated_bytes_per_runner": 4128.6992,
+        "retained_bytes_per_runner": 2799.3696
+      },
+      "eager/true": {
+        "allocated_bytes_per_runner": 4161.6944,
+        "retained_bytes_per_runner": 2800.408
+      },
+      "lazy/false": {
+        "allocated_bytes_per_runner": 2513.8768,
+        "retained_bytes_per_runner": 1302.9536
+      },
+      "lazy/true": {
+        "allocated_bytes_per_runner": 4170.1904,
+        "retained_bytes_per_runner": 2805.2688
+      }
+    }
+  },
+  "timing": {
+    "eager/raw-create": [
+      {
+        "wall": 1980.0933233367539,
+        "cpu": 2000.9865046168416
+      },
+      {
+        "wall": 2049.2057702553207,
+        "cpu": 2055.0387279209867
+      },
+      {
+        "wall": 1951.5518073226726,
+        "cpu": 1961.0910081319794
+      },
+      {
+        "wall": 1927.854467135882,
+        "cpu": 1934.7332794892504
+      },
+      {
+        "wall": 1935.4299447897743,
+        "cpu": 1942.7821319640168
+      }
+    ],
+    "eager/raw-create-execute": [
+      {
+        "wall": 2028.5960487429647,
+        "cpu": 2226.387595643901
+      },
+      {
+        "wall": 2072.226286140337,
+        "cpu": 2073.6890067102972
+      },
+      {
+        "wall": 2017.5838474255113,
+        "cpu": 2016.128381920084
+      },
+      {
+        "wall": 1981.7897385103036,
+        "cpu": 1980.229793977813
+      },
+      {
+        "wall": 1977.9704359511431,
+        "cpu": 1976.6807636061815
+      }
+    ],
+    "eager/hot": [
+      {
+        "wall": 58.1299033597962,
+        "cpu": 57.93762155589217
+      },
+      {
+        "wall": 59.19261963700759,
+        "cpu": 59.05166443510781
+      },
+      {
+        "wall": 58.28363412561599,
+        "cpu": 58.12558791748698
+      },
+      {
+        "wall": 56.43210311239917,
+        "cpu": 56.29155141456786
+      },
+      {
+        "wall": 58.154383398018894,
+        "cpu": 57.97155388281707
+      }
+    ],
+    "lazy/raw-create": [
+      {
+        "wall": 1638.6816679213173,
+        "cpu": 1645.2394200242202
+      },
+      {
+        "wall": 1663.2936447294128,
+        "cpu": 1670.9743862330156
+      },
+      {
+        "wall": 1613.7784436926017,
+        "cpu": 1616.6908329305622
+      },
+      {
+        "wall": 1673.7149928096048,
+        "cpu": 1674.760041470185
+      },
+      {
+        "wall": 1610.109794476558,
+        "cpu": 1610.2440590879896
+      }
+    ],
+    "lazy/raw-create-execute": [
+      {
+        "wall": 2056.8244334248607,
+        "cpu": 2059.464776033769
+      },
+      {
+        "wall": 2035.2891693381475,
+        "cpu": 2036.156312137321
+      },
+      {
+        "wall": 1986.3303497168222,
+        "cpu": 1985.464770882015
+      },
+      {
+        "wall": 2007.283456988173,
+        "cpu": 2005.4140765991579
+      },
+      {
+        "wall": 1967.4173561821015,
+        "cpu": 1963.0210579977256
+      }
+    ],
+    "lazy/hot": [
+      {
+        "wall": 59.14342620529138,
+        "cpu": 59.00998342994272
+      },
+      {
+        "wall": 60.21383403921718,
+        "cpu": 60.055322669409115
+      },
+      {
+        "wall": 58.690544964149,
+        "cpu": 58.5222317814181
+      },
+      {
+        "wall": 57.58224944466892,
+        "cpu": 57.34332410948398
+      },
+      {
+        "wall": 57.45522641017313,
+        "cpu": 57.287076540185524
+      }
+    ]
+  },
+  "first": {
+    "eager": [
+      {
+        "wall": 236.6119713416373,
+        "cpu": 243.59130859375,
+        "calls": 212992
+      },
+      {
+        "wall": 216.39788872372088,
+        "cpu": 227.31868777654867,
+        "calls": 231424
+      },
+      {
+        "wall": 314.4286984174938,
+        "cpu": 322.5661057692308,
+        "calls": 159744
+      },
+      {
+        "wall": 313.69633288262185,
+        "cpu": 313.44526241987177,
+        "calls": 159744
+      },
+      {
+        "wall": 330.6763289168424,
+        "cpu": 328.61328125,
+        "calls": 151552
+      }
+    ],
+    "lazy": [
+      {
+        "wall": 664.1365339949307,
+        "cpu": 1018.1851773648649,
+        "calls": 75776
+      },
+      {
+        "wall": 602.4254120617153,
+        "cpu": 676.7220846036586,
+        "calls": 83968
+      },
+      {
+        "wall": 615.4709350585264,
+        "cpu": 762.5,
+        "calls": 81920
+      },
+      {
+        "wall": 534.5218558933735,
+        "cpu": 530.220363451087,
+        "calls": 94208
+      },
+      {
+        "wall": 464.6957178655681,
+        "cpu": 455.82436615566036,
+        "calls": 108544
+      }
+    ]
+  },
+  "memory": {
+    "eager/false": [
+      {
+        "allocated_bytes_per_runner": 4906.5536,
+        "retained_bytes_per_runner": 2803.6224
+      },
+      {
+        "allocated_bytes_per_runner": 4377.3056,
+        "retained_bytes_per_runner": 2798.9552
+      },
+      {
+        "allocated_bytes_per_runner": 4081.4736,
+        "retained_bytes_per_runner": 2799.3696
+      },
+      {
+        "allocated_bytes_per_runner": 4081.8048,
+        "retained_bytes_per_runner": 2806.8224
+      },
+      {
+        "allocated_bytes_per_runner": 4128.6992,
+        "retained_bytes_per_runner": 2798.7344
+      }
+    ],
+    "eager/true": [
+      {
+        "allocated_bytes_per_runner": 4838.344,
+        "retained_bytes_per_runner": 2803.1152
+      },
+      {
+        "allocated_bytes_per_runner": 4356.296,
+        "retained_bytes_per_runner": 2804.8384
+      },
+      {
+        "allocated_bytes_per_runner": 4126.0208,
+        "retained_bytes_per_runner": 2799.9968
+      },
+      {
+        "allocated_bytes_per_runner": 4007.8448,
+        "retained_bytes_per_runner": 2792.2144
+      },
+      {
+        "allocated_bytes_per_runner": 4161.6944,
+        "retained_bytes_per_runner": 2800.408
+      }
+    ],
+    "lazy/false": [
+      {
+        "allocated_bytes_per_runner": 3304.7232,
+        "retained_bytes_per_runner": 1301.3568
+      },
+      {
+        "allocated_bytes_per_runner": 2784.8288,
+        "retained_bytes_per_runner": 1303.4032
+      },
+      {
+        "allocated_bytes_per_runner": 2473.1008,
+        "retained_bytes_per_runner": 1302.928
+      },
+      {
+        "allocated_bytes_per_runner": 2444.032,
+        "retained_bytes_per_runner": 1310.6624
+      },
+      {
+        "allocated_bytes_per_runner": 2513.8768,
+        "retained_bytes_per_runner": 1302.9536
+      }
+    ],
+    "lazy/true": [
+      {
+        "allocated_bytes_per_runner": 4839.3728,
+        "retained_bytes_per_runner": 2808.5968
+      },
+      {
+        "allocated_bytes_per_runner": 4342.7424,
+        "retained_bytes_per_runner": 2805.8416
+      },
+      {
+        "allocated_bytes_per_runner": 4108.5664,
+        "retained_bytes_per_runner": 2800.2608
+      },
+      {
+        "allocated_bytes_per_runner": 3998.5424,
+        "retained_bytes_per_runner": 2805.2688
+      },
+      {
+        "allocated_bytes_per_runner": 4170.1904,
+        "retained_bytes_per_runner": 2800.5712
+      }
+    ]
+  },
+  "pins": {
+    "eager/src/runtime.ts": "5bb80f51711aa3e7a59f7a922d09962b6b9b3dce1480f3506b7fe73af30c8475",
+    "eager/src/execution.ts": "5e1dfe3f43c9532840ec66e2b1a1a458c99353521e69b1ffac9095947cfe797b",
+    "eager/src/interpreter.ts": "f3f185096004aa62dd06359ecfc22c35809171a6afc119473de5add57bdf65ed",
+    "eager/src/operators.ts": "baf16d5ca1839cb5ab8214c0794e42320e4efe6ce164d131d8cb3b9ebd58a77e",
+    "eager/src/errors.ts": "1ae5f52a01f091952d2bdd644b63fb649149e66a26fd70c7606b3a39274626be",
+    "eager/src/expression_types.ts": "e1c51f6536e92f51052aa4961ef9f865631e95c85aade7a1dfc02162afe44e91",
+    "lazy/src/runtime.ts": "5bb80f51711aa3e7a59f7a922d09962b6b9b3dce1480f3506b7fe73af30c8475",
+    "lazy/src/execution.ts": "fba8d573167c48908e44678c710d873c42182b2072602b47f96e28e4a033f16b",
+    "lazy/src/interpreter.ts": "f3f185096004aa62dd06359ecfc22c35809171a6afc119473de5add57bdf65ed",
+    "lazy/src/operators.ts": "baf16d5ca1839cb5ab8214c0794e42320e4efe6ce164d131d8cb3b9ebd58a77e",
+    "lazy/src/errors.ts": "1ae5f52a01f091952d2bdd644b63fb649149e66a26fd70c7606b3a39274626be",
+    "lazy/src/expression_types.ts": "e1c51f6536e92f51052aa4961ef9f865631e95c85aade7a1dfc02162afe44e91",
+    "measure.ts": "d0f8471c09f498ae22ef8589150360c70cda3073a4d016bb4dd8a4d2b1a525f7"
+  },
+  "version": {
+    "deno": "2.9.7",
+    "v8": "15.0.245.2-rusty",
+    "typescript": "6.0.3"
+  },
+  "method": "timing100mswarmup,5alternating50mswall/CPU samples; firstcall excludes preparation,2048fresh runners/batch,6x50ms(onewarmup); memory5000retainedrunners,fiveforcedGCsamples; no result caching",
+  "sink": 19,
+  "decision": "retain",
+  "decision_reason": "Hot execution CPU increased0.95percent (<5percent threshold), raw creationCPU fell16.1percent, unexecuted-runner allocation fell39.1percent and retention fell53.5percent. First invocation now pays compilation; total raw creation+execution is unchanged. Executed-runner retention remains~2.8KB.",
+  "adoption": "Applied lazy ordinary evaluator initialization, retaining eager finalize_plan. Removed unused execute wrapper after measurement; no measured workload uses that wrapper.",
+  "reproduction": {
+    "benchmark_source": "import {interpreter as eager} from './eager/src/interpreter.ts';\nimport {interpreter as lazy} from './lazy/src/interpreter.ts';\nimport {standard_operators} from './eager/src/operators.ts';\nimport {median,sample} from './measure.ts';\nconst v8:string='node:v8';const {getHeapStatistics}=await import(v8);\nconst proc:string='node:process';const {cpuUsage}=await import(proc);\nconst gc=(globalThis as unknown as {gc():void}).gc;\nconst source='?0 + ?1 * 3';\nconst languages={eager:eager(standard_operators),lazy:lazy(standard_operators)};\nlet sink:unknown;\nconst timing:Record<string,{wall:number;cpu:number}[]>={};\nconst first:Record<string,{wall:number;cpu:number;calls:number}[]>={};\nconst memory:Record<string,{allocated_bytes_per_runner:number;retained_bytes_per_runner:number}[]>={};\nfunction checked(run:unknown): (...values:unknown[])=>unknown {if(run instanceof Error)throw run;return run as (...values:unknown[])=>unknown;}\nconst workloads=Object.entries(languages).flatMap(([name,language])=>{\n const run=checked(language.raw(source));if(run(4,5)!==19)throw new Error('bad workload');\n return [\n  {name:name+'/raw-create',run:()=>language.raw(source)},\n  {name:name+'/raw-create-execute',run:()=>checked(language.raw(source))(4,5)},\n  {name:name+'/hot',run:()=>run(4,5)},\n ];\n});\nfor(const workload of workloads)sample(workload.run,100);\nfor(let round=0;round<5;round++){\n let order=[...workloads];if(round%2===1)order.reverse();\n for(const {name,run} of order)(timing[name]??=[]).push(sample(run,50));\n}\n// Preparation stays outside the clock; every runner in each batch executes exactly once.\nfor(const [name,language] of Object.entries(languages)){\n for(let round=-1;round<5;round++){\n  let wall=0,cpu=0,calls=0;const target=50;\n  while(wall<target){\n   const runners=Array.from({length:2048},()=>checked(language.raw(source)));\n   const c=cpuUsage();const start=performance.now();\n   for(const run of runners)sink=run(4,5);\n   wall+=performance.now()-start;const elapsed=cpuUsage(c);cpu+=elapsed.user+elapsed.system;calls+=runners.length;\n  }\n  if(round>=0)(first[name]??=[]).push({wall:wall*1e6/calls,cpu:cpu*1000/calls,calls});\n }\n}\nfor(let round=0;round<5;round++)for(const [name,language] of Object.entries(languages))for(const executed of [false,true]){\n let retained:unknown[]=new Array(5000);gc();gc();const before=getHeapStatistics();\n for(let i=0;i<retained.length;i++){const runner=checked(language.raw(source));if(executed)sink=runner(4,5);retained[i]=runner;}\n const allocated=getHeapStatistics().total_allocated_bytes-before.total_allocated_bytes;gc();gc();const after=getHeapStatistics();\n if(retained.length!==5000)throw new Error('bad retention');\n (memory[name+'/'+executed]??=[]).push({allocated_bytes_per_runner:allocated/retained.length,retained_bytes_per_runner:(after.used_heap_size-before.used_heap_size)/retained.length});retained=[];gc();gc();\n}\nconst summary={timing:Object.fromEntries(Object.entries(timing).map(([k,x])=>[k,{wall_ns:median(x.map(s=>s.wall)),cpu_ns:median(x.map(s=>s.cpu))}])),first:Object.fromEntries(Object.entries(first).map(([k,x])=>[k,{wall_ns:median(x.map(s=>s.wall)),cpu_ns:median(x.map(s=>s.cpu))}])),memory:Object.fromEntries(Object.entries(memory).map(([k,x])=>[k,{allocated_bytes_per_runner:median(x.map(s=>s.allocated_bytes_per_runner)),retained_bytes_per_runner:median(x.map(s=>s.retained_bytes_per_runner))}]))};\nconsole.log(JSON.stringify({summary,timing,first,memory,pins:JSON.parse(await Deno.readTextFile(new URL('./pins.json',import.meta.url))),version:Deno.version,method:'timing100mswarmup,5alternating50mswall/CPU samples; firstcall excludes preparation,2048fresh runners/batch,6x50ms(onewarmup); memory5000retainedrunners,fiveforcedGCsamples; no result caching',sink},null,2));\n",
+    "measure_source": "interface CpuTime {\n  user: number;\n  system: number;\n}\n// The built-in module needs no packages. Dynamic loading avoids pulling the\n// unrelated @types/node package into this dependency-free Deno project.\nconst process_module: string = \"node:process\";\nconst { cpuUsage }: { cpuUsage(previous?: CpuTime): CpuTime } = await import(\n  process_module\n);\n\nlet sink: unknown;\n/** Time batches with both wall and CPU clocks to expose host contention. */\nexport function sample(\n  run: () => unknown,\n  duration: number,\n): { wall: number; cpu: number } {\n  let count = 0;\n  const cpu_start = cpuUsage();\n  const start = performance.now();\n  let elapsed = 0;\n  let batch = 1;\n  do {\n    for (let index = 0; index < batch; index += 1) sink = run();\n    count += batch;\n    elapsed = performance.now() - start;\n    // Keep slow completion/large-vocabulary cases from overshooting by 100x.\n    batch = Math.min(\n      100,\n      Math.max(1, Math.floor(count / Math.max(elapsed, 0.001))),\n    );\n  } while (elapsed < duration);\n  const cpu = cpuUsage(cpu_start);\n  if (sink === Symbol.for(\"unreachable benchmark sink\")) {\n    throw new Error(\"unreachable\");\n  }\n  return {\n    wall: elapsed * 1e6 / count,\n    cpu: (cpu.user + cpu.system) * 1000 / count,\n  };\n}\n\n/** Report a middle sample instead of treating scheduler/GC outliers as a trend. */\nexport function median(values: readonly number[]): number {\n  const sorted = values.toSorted((a, b) => a - b);\n  return sorted[Math.floor(sorted.length / 2)];\n}\n",
+    "candidate_patch": "--- eager/src/execution.ts\n+++ lazy/src/execution.ts\n@@ -279,11 +279,14 @@\n   hook?: InterpreterApplyOperator,\n ): Evaluation {\n   finalize_plan(plan);\n-  const ordinary = evaluator(plan.root, plan, hook, false);\n+  let ordinary: Evaluation | undefined;\n   let traced: Evaluation | undefined;\n   return (values, steps) => {\n     validate(plan, values);\n-    if (steps === undefined) return ordinary(values);\n+    if (steps === undefined) {\n+      if (ordinary === undefined) ordinary = evaluator(plan.root, plan, hook, false);\n+      return ordinary(values);\n+    }\n     if (traced === undefined) traced = evaluator(plan.root, plan, hook, true);\n     return traced(values, steps);\n   };\n",
+    "command": "deno run --allow-read=/tmp/terp-lazy-lab --v8-flags=--expose-gc /tmp/terp-lazy-lab/bench.ts"
+  },
+  "adopted_execution_sha256": "27201524c61ec77069fdd67eec5cf2a6901a04760ff1dfa1aa49a4e336c0d076"
+}

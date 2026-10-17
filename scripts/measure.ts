@@ -19,10 +19,16 @@ export function sample(
   const cpu_start = cpuUsage();
   const start = performance.now();
   let elapsed = 0;
+  let batch = 1;
   do {
-    for (let index = 0; index < 100; index += 1) sink = run();
-    count += 100;
+    for (let index = 0; index < batch; index += 1) sink = run();
+    count += batch;
     elapsed = performance.now() - start;
+    // Keep slow completion/large-vocabulary cases from overshooting by 100x.
+    batch = Math.min(
+      100,
+      Math.max(1, Math.floor(count / Math.max(elapsed, 0.001))),
+    );
   } while (elapsed < duration);
   const cpu = cpuUsage(cpu_start);
   if (sink === Symbol.for("unreachable benchmark sink")) {

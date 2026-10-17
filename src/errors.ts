@@ -17,6 +17,8 @@ export type InterpreterErrorCode =
   | "limit"
   | "validation";
 
+const implicit_cause = Symbol("syntax cause");
+
 /** An expression failure with its original cause and source location. */
 export class InterpreterError extends TypeError {
   /** Short description, without a redundant interpreter prefix. */
@@ -28,9 +30,23 @@ export class InterpreterError extends TypeError {
   /** Offending source range, when available. */
   readonly span?: SourceSpan;
   /** Underlying failures retained for compatibility and inspection. */
-  readonly errors: readonly Error[];
+  get errors(): readonly Error[] {
+    if (this.#errors === undefined) {
+      const cause = this.cause;
+      this.#errors = [];
+      if (cause instanceof Error) this.#errors = [cause];
+    }
+    return this.#errors;
+  }
   /** Original thrown value. */
-  override readonly cause: unknown;
+  override get cause(): unknown {
+    if (this.#cause === implicit_cause) {
+      this.#cause = new TypeError(this.message);
+    }
+    return this.#cause;
+  }
+  #cause: unknown;
+  #errors: readonly Error[] | undefined;
 
   /** Construct a located error while retaining the original failure. */
   constructor(summary: string, options: {
@@ -40,7 +56,7 @@ export class InterpreterError extends TypeError {
     readonly cause?: unknown;
     readonly errors?: readonly Error[];
   } = {}) {
-    super(summary, { cause: options.cause });
+    super(summary);
     this.name = "InterpreterError";
     this.summary = summary.replace(/^interpreter\s+/, "");
     this.code = options.code ?? "syntax";
@@ -51,11 +67,8 @@ export class InterpreterError extends TypeError {
         end: options.span.end,
       });
     }
-    this.cause = options.cause;
-    this.errors = options.errors ?? [];
-    if (options.errors === undefined && options.cause instanceof Error) {
-      this.errors = [options.cause];
-    }
+    this.#cause = options.cause;
+    this.#errors = options.errors;
   }
 }
 
@@ -64,7 +77,7 @@ export function failure(
   message: string,
   source = "",
   span?: SourceSpan,
-  cause: unknown = new TypeError(message),
+  cause: unknown = implicit_cause,
 ): InterpreterError {
   return new InterpreterError(message, { code, source, span, cause });
 }
