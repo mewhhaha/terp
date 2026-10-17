@@ -1,0 +1,27 @@
+{
+  "scope": "production TypeScript API and implementation; excludes tests/assert helper, examples, docs, benchmarks, scripts",
+  "before": {
+    "files": {
+      "mod.ts": 3,
+      "src/interpreter.ts": 3210,
+      "src/operator_dsl.ts": 406,
+      "src/operators.ts": 521
+    },
+    "total_lines": 4140,
+    "source_sha256": "8c36a97c8c8e0a2d03896ccbc4a395198971ede3940d84822ad6366f261c6d1c"
+  },
+  "after": {
+    "files": {
+      "mod.ts": 52,
+      "src/errors.ts": 78,
+      "src/expression_types.ts": 686,
+      "src/interpreter.ts": 433,
+      "src/operator_dsl.ts": 177,
+      "src/operators.ts": 470,
+      "src/runtime.ts": 863
+    },
+    "total_lines": 2759,
+    "source_sha256": "777de7330c4ac0b9d07a27dbd9c3b992398aab9d92c93dae48018629aa7110e4"
+  },
+  "removed_lines": 1381
+}

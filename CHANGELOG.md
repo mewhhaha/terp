@@ -2,7 +2,22 @@
 
 All notable changes to this package will be documented in this file.
 
-## Unreleased
+## 0.4.0 - 2026-10-17
+
+- Replaced repeated runtime parsing with compiled expression trees and bounded,
+  precedence-aware literal type analysis. Fixed optional/rest calls, grouped
+  arguments, literal results, and placeholder binding consistency.
+- Snapshot interpreter vocabulary; enforce own callable properties and word
+  boundaries; validate syntax and arguments before callbacks execute.
+- Added located errors with stable codes and preserved causes, lazy boolean
+  operators, typed independent fragment composition, checked runtime boundaries,
+  single-execution traces, and vocabulary completion.
+- Simplified operator declarations, made dynamic declarations explicit with
+  `op.raw`, and reduced the public export surface. Custom hooks now yield
+  `unknown` results. Source fragments group their text; structural combinations
+  retain independent arguments and execute through `run` or further `combine`.
+- Added generated conformance, asserted example outputs, reproducible CPU/wall
+  benchmarks, and a type-checking budget. CI checks each test graph once.
 
 - Added typed named-placeholder scopes: literal expressions now infer the scope
   object with one required key per named placeholder, each adopting the operand

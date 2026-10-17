@@ -35,6 +35,8 @@ export interface BinaryOperatorDefinition<
   readonly direction: InfixDirection;
   /** Apply the operator to already-evaluated operands. */
   apply(left: left, right: right): result;
+  /** Evaluate operands on demand; used for short-circuiting operators. */
+  lazy?(left: () => left, right: () => right): result;
 }
 
 /** Runtime definition for a prefix or infix operator. */
@@ -57,24 +59,6 @@ export type OperatorEntry<kind extends string = string> =
 export type OperatorRegistry<kind extends string = string> = Readonly<
   Record<string, OperatorEntry<kind>>
 >;
-
-/** @internal */
-type OperatorEntryKind<entry> = entry extends OperatorDefinition<infer kind>
-  ? kind
-  : entry extends readonly OperatorDefinition<infer kind>[] ? kind
-  : never;
-
-/** Operator tokens in a registry whose definition has the requested kind. */
-export type OperatorsByKind<
-  operators extends OperatorRegistry,
-  kind extends string,
-> = {
-  [operator in keyof operators & string]: Extract<
-    OperatorEntryKind<operators[operator]>,
-    kind
-  > extends never ? never
-    : operator;
-}[keyof operators & string];
 
 /** Create an operator registry while preserving literal token types. */
 export function operators<const registry extends OperatorRegistry>(
@@ -118,6 +102,11 @@ function validate_operator_registry(registry: OperatorRegistry): void {
 function validate_operator_token(token: string): void {
   if (token.length === 0) {
     throw new TypeError("operator token must not be empty");
+  }
+  if (/^(?:\d|\.\d)/.test(token) || token === "true" || token === "false") {
+    throw new TypeError(
+      "operator token `" + token + "` must not shadow literal syntax",
+    );
   }
 
   if (/\s/.test(token)) {
@@ -194,6 +183,14 @@ function validate_operator_definition(
       "operator `" + token + "` definition apply must be a function",
     );
   }
+  if (
+    definition.arity === 2 && definition.lazy !== undefined &&
+    typeof definition.lazy !== "function"
+  ) {
+    throw new TypeError(
+      "operator `" + token + "` definition lazy must be a function",
+    );
+  }
 
   if (
     definition.arity === 2 &&
@@ -236,59 +233,19 @@ export function get_operator_from(
   return operators[token];
 }
 
-/** Return true when a value is an operator token of the requested kind. */
-export function has_operator_kind<
-  operators extends OperatorRegistry,
-  kind extends string,
->(
-  operators: operators,
-  token: unknown,
-  kind: kind,
-): token is OperatorsByKind<operators, kind> {
-  if (typeof token !== "string") {
-    return false;
-  }
-
-  const entry = get_operator_from(operators, token);
-
-  if (entry === undefined) {
-    return false;
-  }
-
-  return operator_definitions(entry).some((definition) => {
-    return definition.kind === kind;
-  });
-}
-
-/** Return the first registered token with the requested kind. */
-export function first_operator_token<
-  operators extends OperatorRegistry,
-  kind extends string,
->(
-  operators: operators,
-  kind: kind,
-): OperatorsByKind<operators, kind> | undefined {
-  for (
-    const token of Object.keys(operators) as Array<keyof operators & string>
-  ) {
-    if (has_operator_kind(operators, token, kind)) {
-      return token;
-    }
-  }
-
-  return undefined;
-}
-
 /** Create a generic prefix operator. */
 export function unary_operator<
   const kind extends string,
   value = unknown,
   result = unknown,
+  const precedence extends number = number,
 >(
   kind: kind,
-  precedence: number,
+  precedence: precedence,
   fn: (value: value) => result,
-): UnaryOperatorDefinition<kind, value, result> {
+): UnaryOperatorDefinition<kind, value, result> & {
+  readonly precedence: precedence;
+} {
   return {
     kind,
     precedence,
@@ -298,11 +255,17 @@ export function unary_operator<
 }
 
 /** Create a numeric binary operator. */
-export function number_operator(
-  precedence: number,
-  direction: InfixDirection,
+export function number_operator<
+  const precedence extends number,
+  const direction extends InfixDirection,
+>(
+  precedence: precedence,
+  direction: direction,
   fn: (left: number, right: number) => number,
-): BinaryOperatorDefinition<"number", number, number, number> {
+): BinaryOperatorDefinition<"number", number, number, number> & {
+  readonly precedence: precedence;
+  readonly direction: direction;
+} {
   return {
     kind: "number",
     precedence,
@@ -315,10 +278,12 @@ export function number_operator(
 }
 
 /** Create a numeric prefix operator. */
-export function number_unary_operator(
-  precedence: number,
+export function number_unary_operator<const precedence extends number>(
+  precedence: precedence,
   fn: (value: number) => number,
-): UnaryOperatorDefinition<"number", number, number> {
+): UnaryOperatorDefinition<"number", number, number> & {
+  readonly precedence: precedence;
+} {
   return {
     kind: "number",
     precedence,
@@ -332,7 +297,10 @@ export function number_unary_operator(
 /** Create an equality operator. */
 export function equality_operator(
   fn: (left: unknown, right: unknown) => boolean = Object.is,
-): BinaryOperatorDefinition<"equality", unknown, unknown, boolean> {
+): BinaryOperatorDefinition<"equality", unknown, unknown, boolean> & {
+  readonly precedence: 4;
+  readonly direction: "none";
+} {
   return {
     kind: "equality",
     precedence: 4,
@@ -345,7 +313,10 @@ export function equality_operator(
 /** Create an ordering operator for numeric operands. */
 export function ordering_operator(
   fn: (left: number, right: number) => boolean,
-): BinaryOperatorDefinition<"ordering", number, number, boolean> {
+): BinaryOperatorDefinition<"ordering", number, number, boolean> & {
+  readonly precedence: 4;
+  readonly direction: "none";
+} {
   return {
     kind: "ordering",
     precedence: 4,
@@ -358,11 +329,17 @@ export function ordering_operator(
 }
 
 /** Create a boolean binary operator. */
-export function boolean_operator(
-  precedence: number,
-  direction: InfixDirection,
+export function boolean_operator<
+  const precedence extends number,
+  const direction extends InfixDirection,
+>(
+  precedence: precedence,
+  direction: direction,
   fn: (left: boolean, right: boolean) => boolean,
-): BinaryOperatorDefinition<"boolean", boolean, boolean, boolean> {
+): BinaryOperatorDefinition<"boolean", boolean, boolean, boolean> & {
+  readonly precedence: precedence;
+  readonly direction: direction;
+} {
   return {
     kind: "boolean",
     precedence,
@@ -375,10 +352,12 @@ export function boolean_operator(
 }
 
 /** Create a boolean prefix operator. */
-export function boolean_unary_operator(
-  precedence: number,
+export function boolean_unary_operator<const precedence extends number>(
+  precedence: precedence,
   fn: (value: boolean) => boolean,
-): UnaryOperatorDefinition<"boolean", boolean, boolean> {
+): UnaryOperatorDefinition<"boolean", boolean, boolean> & {
+  readonly precedence: precedence;
+} {
   return {
     kind: "boolean",
     precedence,
@@ -390,11 +369,17 @@ export function boolean_unary_operator(
 }
 
 /** Create a string binary operator. */
-export function string_operator(
-  precedence: number,
-  direction: InfixDirection,
+export function string_operator<
+  const precedence extends number,
+  const direction extends InfixDirection,
+>(
+  precedence: precedence,
+  direction: direction,
   fn: (left: string, right: string) => string,
-): BinaryOperatorDefinition<"string", string, string, string> {
+): BinaryOperatorDefinition<"string", string, string, string> & {
+  readonly precedence: precedence;
+  readonly direction: direction;
+} {
   return {
     kind: "string",
     precedence,
@@ -406,73 +391,27 @@ export function string_operator(
   };
 }
 
-/** Number operators included in {@link standard_operators}. */
-export type StandardNumberOperatorToken = "+" | "-" | "*" | "/" | "%";
-
-/** Equality operators included in {@link standard_operators}. */
-export type StandardEqualityOperatorToken = "==" | "!=";
-
-/** Ordering operators included in {@link standard_operators}. */
-export type StandardOrderingOperatorToken = "<" | "<=" | ">" | ">=";
-
-/** Boolean operators included in {@link standard_operators}. */
-export type StandardBooleanOperatorToken = "&&" | "||" | "!";
-
-/** String operators included in {@link standard_operators}. */
-export type StandardStringOperatorToken = "++";
-
-/** Any token included in {@link standard_operators}. */
-export type StandardOperatorToken =
-  | StandardNumberOperatorToken
-  | StandardEqualityOperatorToken
-  | StandardOrderingOperatorToken
-  | StandardBooleanOperatorToken
-  | StandardStringOperatorToken;
-
-/** Registry type for the built-in operators. */
-export type StandardOperators =
-  & Readonly<
-    Record<
-      "+" | "*" | "/" | "%",
-      BinaryOperatorDefinition<"number", number, number, number>
-    >
-  >
-  & Readonly<
-    Record<
-      "-",
-      readonly [
-        BinaryOperatorDefinition<"number", number, number, number>,
-        UnaryOperatorDefinition<"number", number, number>,
-      ]
-    >
-  >
-  & Readonly<
-    Record<
-      StandardEqualityOperatorToken,
-      BinaryOperatorDefinition<"equality", unknown, unknown, boolean>
-    >
-  >
-  & Readonly<
-    Record<
-      StandardOrderingOperatorToken,
-      BinaryOperatorDefinition<"ordering", number, number, boolean>
-    >
-  >
-  & Readonly<
-    Record<
-      "&&" | "||",
-      BinaryOperatorDefinition<"boolean", boolean, boolean, boolean>
-    >
-  >
-  & Readonly<
-    Record<"!", UnaryOperatorDefinition<"boolean", boolean, boolean>>
-  >
-  & Readonly<
-    Record<
-      StandardStringOperatorToken,
-      BinaryOperatorDefinition<"string", string, string, string>
-    >
-  >;
+/** Registry type for the built-in operators, including exact fixities. */
+export type StandardOperators = Readonly<{
+  "++": ReturnType<typeof string_operator<6, "left">>;
+  "+": ReturnType<typeof number_operator<6, "left">>;
+  "-": readonly [
+    ReturnType<typeof number_operator<6, "left">>,
+    ReturnType<typeof number_unary_operator<8>>,
+  ];
+  "*": ReturnType<typeof number_operator<7, "left">>;
+  "/": ReturnType<typeof number_operator<7, "left">>;
+  "%": ReturnType<typeof number_operator<7, "left">>;
+  "==": ReturnType<typeof equality_operator>;
+  "!=": ReturnType<typeof equality_operator>;
+  "<": ReturnType<typeof ordering_operator>;
+  "<=": ReturnType<typeof ordering_operator>;
+  ">": ReturnType<typeof ordering_operator>;
+  ">=": ReturnType<typeof ordering_operator>;
+  "!": ReturnType<typeof boolean_unary_operator<8>>;
+  "&&": ReturnType<typeof boolean_operator<3, "right">>;
+  "||": ReturnType<typeof boolean_operator<2, "right">>;
+}>;
 
 /** Standard numeric, string, comparison, equality, and boolean operators. */
 export const standard_operators: StandardOperators = operators({
@@ -492,8 +431,18 @@ export const standard_operators: StandardOperators = operators({
   ">": ordering_operator((left, right) => left > right),
   ">=": ordering_operator((left, right) => left >= right),
   "!": boolean_unary_operator(8, (value) => !value),
-  "&&": boolean_operator(3, "right", (left, right) => left && right),
-  "||": boolean_operator(2, "right", (left, right) => left || right),
+  "&&": {
+    ...boolean_operator(3, "right", (left, right) => left && right),
+    lazy(left: () => boolean, right: () => boolean) {
+      return as_boolean(left()) && as_boolean(right());
+    },
+  },
+  "||": {
+    ...boolean_operator(2, "right", (left, right) => left || right),
+    lazy(left: () => boolean, right: () => boolean) {
+      return as_boolean(left()) || as_boolean(right());
+    },
+  },
 });
 
 function as_number(value: unknown): number {

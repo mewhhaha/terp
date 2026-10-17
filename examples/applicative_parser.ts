@@ -1,8 +1,4 @@
-import {
-  type BinaryOperatorDefinition,
-  interpreter,
-  type UnaryOperatorDefinition,
-} from "../mod.ts";
+import { interpreter, op } from "../mod.ts";
 
 type ParseResult<value> =
   | {
@@ -26,196 +22,110 @@ type Parser<value> = {
 
 type Mapper<value = unknown, result = unknown> = (value: value) => result;
 
-const primitives = {
-  comma: literal(","),
-  dash: literal("-"),
-  digit: regex_parser("digit", /^[0-9]/),
-  letter: regex_parser("letter", /^[A-Za-z]/),
-  number(digits: unknown) {
-    return Number(as_string_array(digits).join(""));
-  },
-  word(letters: unknown) {
-    return as_string_array(letters).join("");
-  },
-  coordinate(x: unknown) {
-    return (y: unknown) => ({ x, y });
-  },
-  tag(name: unknown) {
-    return (id: unknown) => ({ name, id });
-  },
-};
-
-const base_parser = parser_interpreter(primitives);
-const integer = as_parser(base_parser("number <$> some digit"));
-const word = as_parser(base_parser("word <$> some letter"));
-const parser = parser_interpreter({ ...primitives, integer, word });
-
-const coordinate = as_parser(
-  parser("coordinate <$> integer <* comma <*> integer"),
+const digit = regex_parser("digit", /^[0-9]/);
+const letter = regex_parser("letter", /^[A-Za-z]/);
+const integer = text_algebra((digits) => Number(digits.join("")))(
+  "convert <$> some digit",
 );
-const tag = as_parser(parser("tag <$> word <* dash <*> integer"));
-const number_or_word = as_parser(parser("integer <|> word"));
+const word = text_algebra((letters) => letters.join(""))(
+  "convert <$> some letter",
+);
+const coordinate = record_algebra(
+  (x: number) => (y: number) => ({ x, y }),
+  integer,
+  literal(","),
+  integer,
+)("construct <$> first <* separator <*> second");
+const tag = record_algebra(
+  (name: string) => (id: number) => ({ name, id }),
+  word,
+  literal("-"),
+  integer,
+)("construct <$> first <* separator <*> second");
+const choices = interpreter({
+  "<|>": op(
+    "infixr 2 ?",
+    (left: Parser<number>, right: Parser<string>) => alternative(left, right),
+  ),
+}, { values: { integer, word } });
+const number_or_word = choices("integer <|> word");
 
 console.log("applicative-parser", {
-  integer: preview(integer, "123px"),
-  coordinate: preview(coordinate, "12,34!"),
-  tag: preview(tag, "alpha-42 "),
-  fallback: preview(number_or_word, "hello123"),
+  integer: integer("123px"),
+  coordinate: coordinate("12,34!"),
+  tag: tag("alpha-42 "),
+  fallback: number_or_word("hello123"),
 });
 
-function parser_interpreter(values: Record<string, unknown>) {
+// Each small algebra fixes its operand types while sharing generic combinators.
+function text_algebra<value>(convert: Mapper<readonly string[], value>) {
   return interpreter({
-    "<$>": map_operator(),
-    "<*>": apply_operator(),
-    "<*": keep_left_operator(),
-    "*>": keep_right_operator(),
-    "<|>": alternative_operator(),
-    many: many_operator(),
-    some: some_operator(),
-  }, { values });
+    "<$>": op(
+      "infixl 5 ?",
+      (
+        fn: Mapper<readonly string[], value>,
+        parser: Parser<readonly string[]>,
+      ) => map(parser, fn),
+    ),
+    many: op("prefix 8 ?", (parser: Parser<string>) => many(parser)),
+    some: op("prefix 8 ?", (parser: Parser<string>) => some(parser)),
+  }, { values: { convert, digit, letter } });
 }
 
-function map_operator<value, result>(): BinaryOperatorDefinition<
-  "parser",
-  Mapper<value, result>,
-  Parser<value>,
-  Parser<result>
-> {
-  return {
-    kind: "parser",
-    precedence: 5,
-    direction: "left",
-    arity: 2,
-    apply(fn, parser) {
-      if (typeof fn !== "function") {
-        throw new TypeError("<$> expected a function on the left");
-      }
-
-      as_parser(parser);
-
-      return map(parser, fn);
-    },
-  };
+function record_algebra<first, second, result>(
+  construct: Mapper<first, Mapper<second, result>>,
+  first: Parser<first>,
+  separator: Parser<string>,
+  second: Parser<second>,
+) {
+  return interpreter({
+    "<$>": op(
+      "infixl 5 ?",
+      (fn: Mapper<first, Mapper<second, result>>, parser: Parser<first>) =>
+        map(parser, fn),
+    ),
+    "<*": op(
+      "infixl 5 ?",
+      (left: Parser<Mapper<second, result>>, right: Parser<string>) =>
+        keep_left(left, right),
+    ),
+    "<*>": op(
+      "infixl 5 ?",
+      (left: Parser<Mapper<second, result>>, right: Parser<second>) =>
+        apply_parser(left, right),
+    ),
+  }, { values: { construct, first, separator, second } });
 }
 
-function apply_operator<value, result>(): BinaryOperatorDefinition<
-  "parser",
-  Parser<(value: value) => result>,
-  Parser<value>,
-  Parser<result>
-> {
-  return {
-    kind: "parser",
-    precedence: 5,
-    direction: "left",
-    arity: 2,
-    apply(fn_parser, value_parser) {
-      as_parser(fn_parser);
-      as_parser(value_parser);
-
-      return apply_parser(fn_parser, value_parser);
-    },
-  };
-}
-
-function keep_left_operator<left, right>(): BinaryOperatorDefinition<
-  "parser",
-  Parser<left>,
-  Parser<right>,
-  Parser<left>
-> {
-  return {
-    kind: "parser",
-    precedence: 5,
-    direction: "left",
-    arity: 2,
-    apply(left_parser, right_parser) {
-      as_parser(left_parser);
-      as_parser(right_parser);
-
-      return keep_left(left_parser, right_parser);
-    },
-  };
-}
-
-function keep_right_operator<left, right>(): BinaryOperatorDefinition<
-  "parser",
-  Parser<left>,
-  Parser<right>,
-  Parser<right>
-> {
-  return {
-    kind: "parser",
-    precedence: 5,
-    direction: "left",
-    arity: 2,
-    apply(left_parser, right_parser) {
-      as_parser(left_parser);
-      as_parser(right_parser);
-
-      return keep_right(left_parser, right_parser);
-    },
-  };
-}
-
-function alternative_operator<value>(): BinaryOperatorDefinition<
-  "parser",
-  Parser<value>,
-  Parser<value>,
-  Parser<value>
-> {
-  return {
-    kind: "parser",
-    precedence: 2,
-    direction: "right",
-    arity: 2,
-    apply(left_parser, right_parser) {
-      as_parser(left_parser);
-      as_parser(right_parser);
-
-      return alternative(left_parser, right_parser);
-    },
-  };
-}
-
-function many_operator<value>(): UnaryOperatorDefinition<
-  "parser",
-  Parser<value>,
-  Parser<readonly value[]>
-> {
-  return {
-    kind: "parser",
-    precedence: 8,
-    arity: 1,
-    apply(parser) {
-      as_parser(parser);
-
-      return many(parser);
-    },
-  };
-}
-
-function some_operator<value>(): UnaryOperatorDefinition<
-  "parser",
-  Parser<value>,
-  Parser<readonly value[]>
-> {
-  return {
-    kind: "parser",
-    precedence: 8,
-    arity: 1,
-    apply(parser) {
-      as_parser(parser);
-
-      return some(parser);
-    },
-  };
-}
+const expect_parser_types = () => {
+  const integer_parser: Parser<number> = integer;
+  const word_parser: Parser<string> = word;
+  const coordinate_parser: Parser<{ x: number; y: number }> = coordinate;
+  const tag_parser: Parser<{ name: string; id: number }> = tag;
+  const choice_parser: Parser<number | string> = number_or_word;
+  // @ts-expect-error The expression yields numeric values.
+  const wrong_result: Parser<string> = integer;
+  // @ts-expect-error This alternative expects a numeric parser on the left.
+  choices("word <|> integer");
+  // @ts-expect-error Mapping requires a mapper on the left, not a parser.
+  text_algebra((parts) => parts.join(""))("digit <$> some letter");
+  void integer_parser;
+  void word_parser;
+  void coordinate_parser;
+  void tag_parser;
+  void choice_parser;
+  void wrong_result;
+};
+void expect_parser_types;
 
 function map<left, right>(
   parser: Parser<left>,
   fn: (value: left) => right,
 ): Parser<right> {
+  check_parser(parser);
+  if (typeof fn !== "function") {
+    throw new TypeError("map expected a function");
+  }
   return make_parser("(" + parser.label + " mapped)", (input) => {
     const result = parser(input);
 
@@ -231,6 +141,8 @@ function apply_parser<left, right>(
   fn_parser: Parser<(value: left) => right>,
   value_parser: Parser<left>,
 ): Parser<right> {
+  check_parser(fn_parser);
+  check_parser(value_parser);
   return make_parser(
     "(" + fn_parser.label + " <*> " + value_parser.label + ")",
     (input) => {
@@ -259,6 +171,8 @@ function keep_left<left>(
   left_parser: Parser<left>,
   right_parser: Parser<unknown>,
 ): Parser<left> {
+  check_parser(left_parser);
+  check_parser(right_parser);
   return make_parser(
     "(" + left_parser.label + " <* " + right_parser.label + ")",
     (input) => {
@@ -279,29 +193,13 @@ function keep_left<left>(
   );
 }
 
-function keep_right<right>(
-  left_parser: Parser<unknown>,
+function alternative<left, right>(
+  left_parser: Parser<left>,
   right_parser: Parser<right>,
-): Parser<right> {
-  return make_parser(
-    "(" + left_parser.label + " *> " + right_parser.label + ")",
-    (input) => {
-      const left_result = left_parser(input);
-
-      if (!left_result.ok) {
-        return left_result;
-      }
-
-      return right_parser(left_result.rest);
-    },
-  );
-}
-
-function alternative<value>(
-  left_parser: Parser<value>,
-  right_parser: Parser<value>,
-): Parser<value> {
-  return make_parser(
+): Parser<left | right> {
+  check_parser(left_parser);
+  check_parser(right_parser);
+  return make_parser<left | right>(
     "(" + left_parser.label + " <|> " + right_parser.label + ")",
     (input) => {
       const left_result = left_parser(input);
@@ -325,6 +223,7 @@ function alternative<value>(
 }
 
 function many<value>(parser: Parser<value>): Parser<readonly value[]> {
+  check_parser(parser);
   return make_parser("many " + parser.label, (input) => {
     const values: value[] = [];
     let rest = input;
@@ -347,6 +246,7 @@ function many<value>(parser: Parser<value>): Parser<readonly value[]> {
 }
 
 function some<value>(parser: Parser<value>): Parser<readonly value[]> {
+  const tail = many(parser);
   return make_parser("some " + parser.label, (input) => {
     const first = parser(input);
 
@@ -354,7 +254,7 @@ function some<value>(parser: Parser<value>): Parser<readonly value[]> {
       return first;
     }
 
-    const rest = many(parser)(first.rest);
+    const rest = tail(first.rest);
 
     if (!rest.ok) {
       return rest;
@@ -366,9 +266,10 @@ function some<value>(parser: Parser<value>): Parser<readonly value[]> {
 
 function literal(expected: string): Parser<string> {
   return make_parser(JSON.stringify(expected), (input) => {
-    return input.startsWith(expected)
-      ? success(expected, input.slice(expected.length))
-      : failure(JSON.stringify(expected), input);
+    if (input.startsWith(expected)) {
+      return success(expected, input.slice(expected.length));
+    }
+    return failure(JSON.stringify(expected), input);
   });
 }
 
@@ -376,9 +277,10 @@ function regex_parser(label: string, regex: RegExp): Parser<string> {
   return make_parser(label, (input) => {
     const match = regex.exec(input);
 
-    return match !== null && match.index === 0
-      ? success(match[0], input.slice(match[0].length))
-      : failure(label, input);
+    if (match !== null && match.index === 0) {
+      return success(match[0], input.slice(match[0].length));
+    }
+    return failure(label, input);
   });
 }
 
@@ -402,44 +304,11 @@ function failure(expected: string, rest: string): ParseResult<never> {
   return { ok: false, expected, rest };
 }
 
-function preview(parser: Parser<unknown>, input: string): object {
-  const result = parser(input);
-
-  if (!result.ok) {
-    return {
-      ok: false,
-      expected: result.expected,
-      rest: result.rest,
-    };
-  }
-
-  return {
-    ok: true,
-    value: result.value,
-    rest: result.rest,
-  };
-}
-
-function as_parser(value: unknown): Parser<unknown> {
-  if (is_parser(value)) {
-    return value;
-  }
-
-  throw new TypeError("expected parser value");
-}
-
-function is_parser(value: unknown): value is Parser<unknown> {
-  return typeof value === "function" &&
-    (value as Partial<Parser<unknown>>)[parser_tag] === true;
-}
-
-function as_string_array(value: unknown): readonly string[] {
+function check_parser(value: unknown): void {
   if (
-    Array.isArray(value) &&
-    value.every((item) => typeof item === "string")
+    typeof value !== "function" ||
+    (value as Partial<Parser<unknown>>)[parser_tag] !== true
   ) {
-    return value;
+    throw new TypeError("expected parser value");
   }
-
-  throw new TypeError("expected string array");
 }

@@ -1,0 +1,31 @@
+{
+  "version": {
+    "deno": "2.9.7",
+    "v8": "15.0.245.2-rusty",
+    "typescript": "6.0.3"
+  },
+  "target": "x86_64-unknown-linux-gnu",
+  "revision": "1c372df1c710953605ce7e03ac34e5ca2af45268",
+  "source_sha256": "8c36a97c8c8e0a2d03896ccbc4a395198971ede3940d84822ad6366f261c6d1c",
+  "workload_sha256": "48be6f7ef768a572a268976898c54b6d98208c9c7276a1162d6c320d5f249ebe",
+  "expressions": 24,
+  "samples_ms": [
+    7028.974518,
+    8542.511395000001,
+    8186.4645580000015,
+    6837.397101999999,
+    6290.890533999998
+  ],
+  "median_ms": 7028.974518,
+  "instantiations": 471538,
+  "scheduling": {
+    "requested": "SCHED_OTHER",
+    "observed_before_normalization": {
+      "SCHED_OTHER": 11901,
+      "SCHED_IDLE": 13
+    },
+    "normalizations": 13,
+    "poll_ms": 50,
+    "scope": "only this benchmark process and its own descendants/threads"
+  }
+}

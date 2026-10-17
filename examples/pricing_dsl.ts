@@ -1,11 +1,11 @@
-import { interpreter, number_operator, number_unary_operator } from "../mod.ts";
+import { interpreter, op } from "../mod.ts";
 
 const pricing = interpreter({
-  plus: number_operator(6, "left", (left, right) => left + right),
-  minus: number_operator(6, "left", (left, right) => left - right),
-  times: number_operator(7, "left", (left, right) => left * right),
-  over: number_operator(7, "left", (left, right) => left / right),
-  pct: number_unary_operator(8, (value) => value / 100),
+  plus: op("infixl 6 ?", (left: number, right: number) => left + right),
+  minus: op("infixl 6 ?", (left: number, right: number) => left - right),
+  times: op("infixl 7 ?", (left: number, right: number) => left * right),
+  over: op("infixl 7 ?", (left: number, right: number) => left / right),
+  pct: op("prefix 8 ?", (value: number) => value / 100),
 });
 
 const quote = {

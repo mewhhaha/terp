@@ -1,10 +1,8 @@
+import { get_operator_from } from "./operators.ts";
 import { assert_equals, assert_true } from "./assert.ts";
 import {
   boolean_unary_operator,
   type ExpressionFragment,
-  first_operator_token,
-  get_operator_from,
-  has_operator_kind,
   interpreter,
   InterpreterError,
   number_operator,
@@ -303,7 +301,7 @@ Deno.test("interpreter raw templates reject unsafe fragment composition", () => 
       terp.raw`${first} ${second}`,
       "invalid composed expressions should fail raw validation",
     ).summary,
-    "expected a registered operator at `?`",
+    "expected a registered operator at `(?)`",
   );
   assert_equals(
     assert_raw_error(
@@ -450,22 +448,13 @@ Deno.test("interpreter keeps operators in the registry instead of callable prope
 
 Deno.test("operator registry helpers work with single definitions and overloads", () => {
   assert_equals(get_operator_from(standard_operators, "+"), terp.get("+"));
-  assert_equals(has_operator_kind(standard_operators, "+", "number"), true);
-  assert_equals(has_operator_kind(standard_operators, "++", "string"), true);
-  assert_equals(has_operator_kind(standard_operators, "!", "boolean"), true);
-  assert_equals(
-    has_operator_kind(standard_operators, "missing", "number"),
-    false,
-  );
-  assert_equals(first_operator_token(standard_operators, "string"), "++");
-
   const overloaded = terp.get("-");
 
   assert_true(
     Array.isArray(overloaded),
     "overloaded standard '-' should expose unary and binary definitions",
   );
-  assert_equals(has_operator_kind(standard_operators, "-", "number"), true);
+  assert_equals(overloaded.map((definition) => definition.arity), [2, 1]);
 });
 
 Deno.test("operator registries reject tokens that conflict with parser syntax", () => {
@@ -853,9 +842,11 @@ Deno.test("interpreter rejects non-associative and mixed-associativity chains", 
     righty: number_operator(5, "right", (left, right) => left ** right),
   }));
   const non_associative_error = catch_type_error(() => {
+    // @ts-expect-error Non-associative chains are also rejected statically.
     return mixed_itp("1 same 1 same true");
   });
   const mixed_associativity_error = catch_type_error(() => {
+    // @ts-expect-error Mixed associativity is also rejected statically.
     return mixed_itp("1 lefty 2 righty 3");
   });
 

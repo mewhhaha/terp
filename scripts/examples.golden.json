@@ -1,0 +1,10 @@
+{
+  "examples/applicative_parser.ts": "applicative-parser {\n  integer: { ok: true, value: 123, rest: \"px\" },\n  coordinate: { ok: true, value: { x: 12, y: 34 }, rest: \"!\" },\n  tag: { ok: true, value: { name: \"alpha\", id: 42 }, rest: \" \" },\n  fallback: { ok: true, value: \"hello\", rest: \"123\" }\n}\n",
+  "examples/bash_like_dsl.ts": "bash-like {\n  greeting: \"HELLO FROM TERP\",\n  hello_lines: \"hello from terp, well hello again\",\n  first_error: \"error database\",\n  error_count: 2,\n  home_name: \"terp\"\n}\n",
+  "examples/feature_flags.ts": "feature-flags [\n  {\n    user: \"usr_1001\",\n    flags: { new_checkout: true, search_v2: true, beta_reports: false }\n  },\n  {\n    user: \"usr_1002\",\n    flags: { new_checkout: true, search_v2: false, beta_reports: false }\n  },\n  {\n    user: \"usr_1003\",\n    flags: { new_checkout: false, search_v2: false, beta_reports: true }\n  }\n]\n",
+  "examples/form_validation.ts": "form-validation [\n  { submission: 1, valid: true, errors: [] },\n  {\n    submission: 2,\n    valid: false,\n    errors: [\n      \"email has an invalid format\",\n      \"password must be at least 10 characters with a digit\",\n      \"age must be at least 18\",\n      \"referral_code must be blank\",\n      \"referral_code must look like ABC-1234\"\n    ]\n  },\n  { submission: 3, valid: true, errors: [] }\n]\n",
+  "examples/functions_dsl.ts": "functions { pipeline: \"HELLO!\", composed: \"HELLO!\", near: true, quadrant: \"NE\" }\n",
+  "examples/json_key_metrics.ts": "json-key-metrics [\n  {\n    account: \"Atlas\",\n    gross_revenue: 156000,\n    operating_cost: 90000,\n    net: 66000,\n    margin: 0.4230769230769231,\n    healthy: true\n  },\n  {\n    account: \"Beacon\",\n    gross_revenue: 93000,\n    operating_cost: 87000,\n    net: 6000,\n    margin: 0.06451612903225806,\n    healthy: false\n  }\n]\n",
+  "examples/pricing_dsl.ts": "pricing { monthly: 5310, seat_share: 0.15254237288135594 }\n",
+  "examples/rules_engine.ts": "rules { approved: true, review: false }\n"
+}

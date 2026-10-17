@@ -1,332 +1,203 @@
-# API Reference
+# API and language rules
 
 ## Expressions
 
-An expression is a sequence of values separated by registered infix operators.
-The runtime parser supports:
+`interpreter(registry, options?)` returns a callable language. `terp` is the
+standard language with arithmetic, string `++`, comparison, equality, and
+boolean operators.
 
-- number literals such as `1`, `3.14`, and `-2`
-- string literals such as `"hello"` and `'world'`
-- boolean literals: `true` and `false`
-- positional placeholders: `?`
-- indexed placeholders: `?0`, `?1`, `?2`
-- named placeholders: `?name`
-- named values from the interpreter, such as `trim` or `HOME`
-- parenthesized operator values such as `(+)` and `(add)`
-- grouped expressions such as `(1 + 2) * 3`
-- prefix and infix operators from the interpreter registry
+| Form                                       | Meaning                                                   |
+| ------------------------------------------ | --------------------------------------------------------- |
+| `language("1 + 2")`                        | Evaluate a literal; infer its result                      |
+| `language("? + ?", 1, 2)`                  | Evaluate with typed arguments                             |
+| `language("? + ?")`                        | Compile a typed reusable runner                           |
+| `language.raw(source)`                     | Compile runtime text; return runner or `InterpreterError` |
+| `language.fragment(source)`                | Validate a reusable fragment with its own `.run(...)`     |
+| `language.combine(token, left, right?)`    | Compose typed fragments with independent arguments        |
+| `language.checked(source, guards)`         | Compile with runtime argument/result guards               |
+| `language.explain(source, ...args)`        | Execute once and return `{ value, steps }` or error       |
+| `language.complete(source, cursor?)`       | Suggest valid vocabulary continuations                    |
+| `language.get(token)` / `.get_value(name)` | Read vocabulary snapshots                                 |
 
-Whitespace is optional around symbolic operators and useful around word
-operators.
+Numbers support finite decimal, scientific, hexadecimal, binary, and octal
+literals. Strings use single or double quotes and escapes `\\`, `\'`, `\"`,
+`\n`, `\r`, and `\t`. JavaScript whitespace is accepted. Booleans are `true` and
+`false`. Parentheses group expressions; `(+)` retrieves an operator value.
 
-Number literal support follows TypeScript's `${number}` string shape for finite
-numbers, including decimal, scientific, hexadecimal, binary, and octal forms.
-String literals support escapes for `\\`, `\"`, `\'`, `\n`, `\r`, and `\t`.
-
-## `terp`
-
-```ts
-import { terp } from "jsr:@mewhhaha/terp";
-```
-
-The default interpreter includes:
-
-- number operators: `+`, `-`, `*`, `/`, `%`
-- string operators: `++`
-- equality operators: `==`, `!=`
-- ordering operators: `<`, `<=`, `>`, `>=`
-- boolean operators: `!`, `&&`, `||`
-
-Examples:
+## Operators
 
 ```ts
-terp("2 + 3 * 4"); // 14
-terp("? + ?", 20, 22); // 42
-terp("?0 + ?0", 21); // 42
-terp("(1 + 2) * 3"); // 9
-terp("-?0", 42); // -42
-terp("!false"); // true
-terp('"hello" ++ "world"'); // "helloworld"
+import { interpreter, op } from "../mod.ts";
 
-const add = terp("? + ?");
-add(1, 2); // 3
-
-terp("(+)") === terp.get("+"); // true
-```
-
-Indexed placeholders are zero-based and can reuse the same value. Positional `?`
-placeholders read the slots after the highest indexed placeholder, in order of
-appearance, so `?0 + ?` reads the first and second positional values and
-`? + ?0` reads the second and first. This matches the inferred argument tuple:
-indexed slots first, then one slot per positional placeholder.
-
-## `interpreter`
-
-```ts
-const calc = interpreter({
-  add: number_operator(6, "left", (left, right) => left + right),
-  neg: number_unary_operator(8, (value) => -value),
-}, {
-  values: {
-    answer: 42,
-  },
+const words = interpreter({
+  add: op("'math' | infixl 6 ?", (a: number, b: number) => a + b),
+  neg: op("prefix 8 ?", (value: number) => -value),
 });
+words("neg 2 add 5"); // 3
 ```
 
-Creates a callable interpreter from the supplied operator registry. You can pass
-a plain object directly; `operators(...)` is only needed when you want to define
-and validate a reusable registry separately. Use `options.values` to expose
-named constants or functions as bare identifiers in expressions. The returned
-value also exposes:
+Declarations use `prefix`, `infixl`, `infixr`, or non-associative `infix`,
+followed by precedence and `?`. Higher precedence binds tighter. Prefix
+operators bind before infix operators at equal precedence. Mixing
+associativities at the same precedence requires grouping. `op.kind("math")`
+supplies a shared category. Callbacks can ignore unused arguments but cannot
+require more than the declared arity. Literal declarations are checked; dynamic
+declarations use `op.raw(declaration, callback, options?)`, returning a
+definition or `TypeError`.
 
-- `calc.operators`
-- `calc.values`
-- `calc.get(token)`
-- `calc.get_value(name)`
-- `calc.fragment(expression)`
-- `calc.raw(expression)`
+An operator is also an ordinary object with `kind`, `precedence`, `arity`,
+`apply`, and (for binary operators) `direction`. `operator(unary, binary)`
+combines two arities under one token. `operators(registry)` validates a reusable
+table.
 
-Operator tokens are not copied onto the callable interpreter as properties. This
-keeps tokens such as `get`, `name`, and `length` safe to use in a registry.
-Named values are also kept in `calc.values` rather than copied onto the callable
-interpreter.
+Numeric, string, boolean, equality, ordering, and unary helper constructors are
+exported for common cases. They retain literal fixity metadata. Numeric/string/
+boolean helpers validate operand types at runtime; `op` retains the callback's
+own behavior and does not manufacture runtime type guards.
 
-Bare named values are interpreter-level vocabulary. Named placeholders remain
-per-call data:
+Tokens cannot be empty, contain whitespace or `()?"'`, begin with a numeric
+literal, or equal `true`/`false`. Word operators require an identifier boundary,
+so `not` does not consume the start of `notice`.
 
-```ts
-const calc = interpreter({
-  "+": number_operator(6, "left", (left, right) => left + right),
-}, {
-  values: {
-    one: 1,
-  },
-});
+## Arguments and vocabulary
 
-calc("one + ?value", { value: 41 }); // 42
-calc.get_value("one"); // 1
-```
+- Each `?` consumes one argument after the highest indexed placeholder.
+- `?0`, `?1`, etc. select zero-based positional arguments and can repeat.
+- Named placeholders such as `?price` read own properties of the first argument.
+  Positional arguments follow that scope object.
+- Missing bindings and surplus arguments are rejected before any callback runs.
+  `undefined` is a valid supplied value.
 
-Named placeholders read only own properties from the scope object. Inherited
-prototype properties such as `constructor` are treated as missing.
-
-For literal expressions the scope parameter is typed from the named placeholders
-themselves: every referenced name becomes a required key, and each key adopts
-the operand type expected by the surrounding operator. In the example above the
-scope is typed `{ value: number }`, so a missing key or a non-number value is a
-compile-time error.
-
-Value names must be valid identifiers, cannot be `true` or `false`, and cannot
-conflict with an operator token.
-
-Callable named values can receive following space-separated words as arguments.
-Unquoted identifier-shaped words are strings, while literals, placeholders, and
-named values keep their runtime values. Configure `word_prefixes` when words may
-start with additional prefixes; no prefixes are enabled by default.
+`options.values` exposes named constants and functions. Bare function names
+return the function; following whitespace-separated words invoke it.
+Unregistered identifier-shaped argument words are strings. Literal arguments
+retain their types. Groups supply one evaluated argument.
 
 ```ts
-const words = interpreter({}, {
-  word_prefixes: ["-", "--"] as const,
+const tools = interpreter({}, {
   values: {
-    collect(...words: string[]): string[] {
-      return words;
+    greet(name: string, title?: string) {
+      let prefix = "";
+      if (title !== undefined) prefix = title + " ";
+      return "hello " + prefix + name;
     },
   },
 });
-
-words("collect alpha -v --version"); // ["alpha", "-v", "--version"]
-words("collect -v ?", "input"); // ["-v", "input"]
+tools('greet Ada "Dr"'); // "hello Dr Ada"
 ```
 
-`raw` is for expressions that are only known at runtime, such as user-authored
-DSL strings. It returns either an `InterpreterError` or a function with
-`(...args: unknown[]) => unknown` instead of using literal-type syntax checks:
+Optional and rest parameters constrain literal calls and placeholders. A
+function with no supplied words is always a value, including a zero-argument
+function; register a prefix operation to invoke such functions explicitly.
+`word_prefixes: ["-", "--"] as const` opts into argument words such as
+`--verbose`.
+
+The interpreter snapshots own registry entries, metadata, named values, and
+prefixes at construction. Objects used as values and callback closure state
+remain application-owned; this is a shallow snapshot. Registered prototype
+operator methods are retained. Inherited vocabulary names are never callable.
+
+## Execution and errors
+
+Compilation constructs an expression tree without executing operators, named
+functions, or application hooks. Reusable runners retain it. Execution evaluates
+operands from left to right, then applies their operator or function.
+
+Binary definitions may supply `lazy(leftThunk, rightThunk)` in addition to
+`apply`. Each thunk evaluates at most once. Standard `&&` and `||` use this to
+skip the unnecessary branch; custom operators remain eager unless they opt in.
+All required input bindings are still validated before execution.
+
+`options.apply_operator` replaces application with `(operator, ...operands)`. It
+receives eager operands and overrides lazy behavior. Since it can replace result
+semantics, that interpreter's expression results are typed `unknown`. Use
+`explain` for observation without replacing semantics.
+
+`InterpreterError` extends `TypeError` and carries:
+
+- `summary`: short diagnostic;
+- `code`: `syntax`, `unknown_value`, `arguments`, `operator`, `function`,
+  `fragment`, `limit`, or `validation`;
+- `source` and `span: { start, end }`: original source and exclusive-end
+  offsets;
+- `cause` and `errors`: originating exceptions.
+
+Direct calls and runners throw errors. `raw`, `fragment`, `combine`, `checked`
+compilation, and `explain` return them. Application exceptions retain their
+causes. Runtime strings validate syntax rather than the domains of arbitrary
+callbacks.
+
+## Fragments
 
 ```ts
-const expression_from_user: string = "?0 + ?0";
-const double = calc.raw(expression_from_user);
-
-if (double instanceof Error) {
-  console.error(double.summary);
-  console.error(double.errors);
-  throw double;
+const left = words.fragment("?0 add 1");
+const right = words.fragment("?0 add 2");
+if (!(left instanceof Error) && !(right instanceof Error)) {
+  const result = words.combine("add", left, right);
+  if (!(result instanceof Error)) result.run(10, 20); // 33
 }
-
-double(21); // 42
 ```
 
-Use `fragment` when runtime-authored pieces need to be validated before being
-assembled into a larger expression. Fragments stringify to their original
-expression, but `raw` also works as a tagged template and rejects interpolations
-that are not fragments from the same interpreter:
+Structural `combine` concatenates argument tuples in operand order. Each operand
+keeps its own scope object and indexed slots. Nested combinations retain those
+bindings. Incompatible operand result types fail checking.
+
+Tagged `raw` templates accept only source fragments from the same interpreter.
+Each interpolation is parenthesized. Named and indexed placeholders share the
+final expression's bindings; anonymous placeholders remain sequential.
+
+Combined fragments retain bindings that cannot be represented by their display
+source alone. Execute them with `.run` or combine them again; inserting one into
+a textual template returns a fragment error rather than silently changing slots.
+
+## Checked runtime input
 
 ```ts
-const left = calc.fragment("?0 add ?1");
-const right = calc.fragment("answer");
+import { terp } from "../mod.ts";
 
-if (left instanceof Error || right instanceof Error) {
-  throw left instanceof Error ? left : right;
-}
-
-const runner = calc.raw`${left} add ${right}`;
-
-if (runner instanceof Error) {
-  throw runner;
-}
-
-runner(20, 22); // 84
-```
-
-The final composed expression is validated before `raw` returns a runner, so a
-bad combination still returns an `InterpreterError`.
-
-`options.apply_operator` can replace the default operator application step:
-
-```ts
-const traced = interpreter(standard_operators, {
-  apply_operator(operator, ...operands) {
-    console.log(operator.token, operands);
-
-    switch (operator.definition.arity) {
-      case 1:
-        return operator.definition.apply(operands[0]);
-      case 2:
-        return operator.definition.apply(operands[0], operands[1]);
-    }
-  },
+const run = terp.checked("? + ?", {
+  arguments: (
+    values: readonly unknown[],
+  ): values is readonly [number, number] =>
+    values.length === 2 && values.every((value) => typeof value === "number"),
+  result: (value: unknown): value is number => typeof value === "number",
 });
-```
-
-## Operator Definitions
-
-Unary and binary operator definitions share `kind`, `precedence`, and `arity`.
-Binary definitions also include associativity:
-
-```ts
-interface UnaryOperatorDefinition<
-  kind extends string = string,
-  value = unknown,
-  result = unknown,
-> {
-  readonly kind: kind;
-  readonly precedence: number;
-  readonly arity: 1;
-  apply(value: value): result;
-}
-
-interface BinaryOperatorDefinition<
-  kind extends string = string,
-  left = unknown,
-  right = unknown,
-  result = unknown,
-> {
-  readonly kind: kind;
-  readonly precedence: number;
-  readonly arity: 2;
-  readonly direction: "left" | "right" | "none";
-  apply(left: left, right: right): result;
+if (!(run instanceof Error)) {
+  const total: number = run(2, 3);
 }
 ```
 
-The generic operand and result parameters let reusable operator builders expose
-their domain types. For example, a map-style operator can be typed as
-`BinaryOperatorDefinition<"map", (value: A) => B, readonly A[], readonly B[]>`.
-Keep runtime guards in custom operators when expression strings or placeholders
-can supply values from untyped sources.
+Argument guards run before callbacks. Result guards run after evaluation. A
+guard rejection throws `InterpreterError` with code `validation`. Guards should
+be ordinary pure predicates; their cost is part of executing the checked runner.
 
-For literal expressions, the interpreter uses those operator types to check
-known operands and infer runner arguments and direct-call arguments. For
-example, if `<$>` is typed as
-`((number) => string, readonly number[]) => string[]`, then
-`arrays("? <$> numbers")` returns a runner that expects a number-to-string
-function, `arrays("stringify <$> ?")` expects a `readonly number[]`, and
-`arrays("? <$> ?")` expects both arguments in that order. Literal chains such as
-`arrays("? <$> ? <*> ?")` infer the ordered placeholder arguments through the
-chain. Literal indexed placeholders infer tuple positions for single-digit
-indexes; larger indexes and dynamic `string` expressions remain permissive at
-the type level. Parenthesized literal subexpressions preserve their grouped
-placeholder inference.
+## Explanation and completion
 
-Higher precedence values bind more tightly. Binary operators with the same
-precedence must have the same associativity. `"none"` prevents chaining at the
-same precedence. Unary operators are prefix operators. Parentheses group
-subexpressions and override normal precedence.
+`explain` returns the result and completed function/operator steps in execution
+order. Each step has a name, source span, evaluated operands, and result.
+Skipped lazy branches produce no steps. Application code executes exactly once.
 
-Register only the infix token itself. For example, registering `+` also allows
-`(+)` as an operator value expression; `"(+)"` is not a separate registry key.
+`complete` suggests registered operators and values with replacement offsets. It
+checks syntax using the same runtime parser, supports partial words/symbols and
+open groups, and never evaluates callbacks. Suggestions concern syntax and
+vocabulary, not erased TypeScript operand types. The optional cursor defaults to
+the end; text after the cursor is not used to qualify suggestions.
 
-Operator tokens must not be empty or contain whitespace, `(`, `)`, `?`, `"`, or
-`'`. Parentheses are reserved for grouping and operator values, `?` is reserved
-for placeholders, and quotes are reserved for string literals.
+## Predictable limits
 
-Runtime registry validation rejects empty overload sets, malformed definitions,
-unsupported arities, non-finite precedence values, invalid binary directions,
-and non-callable `apply` hooks.
+Runtime expressions allow 100,000 characters and tree/nesting depth 128. Larger
+input returns a located `limit` error. These bounds prevent call-stack failures.
 
-Helper constructors:
+Literal analysis is exact within its supported grammar and budget: up to 512
+characters, 256 tokens, 24 recursive parser levels, indexes 0–99, and literal
+integer precedences with magnitude up to 128. Larger or widened inputs fall back
+to `unknown` results and runtime validation, preserving compiler responsiveness.
+Long left-associative chains use iterative type recursion. Literal operator
+metadata is preserved by the supplied builders; an explicitly widened operator
+annotation can intentionally lose that information.
 
-- `operator(definition, ...overloads)`
-- `op(declaration, fn, options?)`
-- `unary_operator(kind, precedence, fn)`
-- `number_operator(precedence, direction, fn)`
-- `number_unary_operator(precedence, fn)`
-- `string_operator(precedence, direction, fn)`
-- `equality_operator(fn?)`
-- `ordering_operator(fn)`
-- `boolean_operator(precedence, direction, fn)`
-- `boolean_unary_operator(precedence, fn)`
+## Development evidence
 
-`op` is a small terp-powered DSL for defining ordinary operator definitions. It
-accepts `prefix`, `infixl`, `infixr`, or `infix` declarations followed by a
-precedence and `?`. The `?` marks the registry key being defined. Put a string
-literal on the left of `|` to set `kind` in the same declaration:
-
-```ts
-const calc = interpreter({
-  add: op("'math' | infixl 6 ?", (left: number, right: number) => left + right),
-  mul: op("'math' | infixl 7 ?", (left: number, right: number) => left * right),
-  neg: op("'math' | prefix 8 ?", (value: number) => -value),
-});
-
-calc("2 add 3 mul 4"); // 14
-calc("neg 42"); // -42
-```
-
-Definitions created without an inline kind default to `kind: "operator"`. You
-can also pass a literal `kind` option or create a kind-bound helper when lookup
-narrowing matters:
-
-```ts
-const shell_op = op.kind("shell");
-
-const shell = interpreter({
-  echo: shell_op("prefix 8 ?", String),
-  "|": op("'shell' | infixl 1 ?", (
-    value,
-    fn: (value: unknown) => unknown,
-  ) => fn(value)),
-});
-```
-
-## Registry Helpers
-
-`operators` validates a registry while preserving literal token types. It is
-useful when a registry is shared, exported, or composed before being passed to
-`interpreter(...)`:
-
-```ts
-const registry = operators({
-  add: number_operator(6, "left", (left, right) => left + right),
-  neg: number_unary_operator(8, (value) => -value),
-  "~": operator(
-    number_operator(6, "left", (left, right) => left + right),
-    number_unary_operator(8, (value) => -value),
-  ),
-});
-```
-
-Lookup and narrowing helpers:
-
-- `get_operator_from(registry, token)`
-- `has_operator_kind(registry, token, kind)`
-- `first_operator_token(registry, kind)`
+See [hills and measurements](hills.md) for benchmarks, generated conformance,
+example output checks, and reproducible commands. `deno task ci` is the release
+gate. The package has no runtime dependencies.

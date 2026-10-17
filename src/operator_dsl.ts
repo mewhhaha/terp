@@ -1,406 +1,177 @@
-import { interpreter } from "./interpreter.ts";
-import {
-  type BinaryOperatorDefinition,
-  type InfixDirection,
-  type OperatorDefinition,
-  unary_operator,
-  type UnaryOperatorDefinition,
-} from "./operators.ts";
+import type { OperatorDefinition } from "./operators.ts";
 
 /** Prefix operator declaration understood by {@link op}. */
 export type PrefixOperatorDeclaration = `prefix ${number} ?`;
-
 /** Infix operator declaration understood by {@link op}. */
 export type InfixOperatorDeclaration =
   | `infix ${number} ?`
   | `infixl ${number} ?`
   | `infixr ${number} ?`;
 
-/** String literal kind marker understood by {@link op}. */
-export type OperatorKindLiteral<kind extends string = string> =
-  | `'${kind}'`
-  | `"${kind}"`;
+/** @internal */
+type UnaryCallback = { apply(value: unknown): unknown }["apply"];
+/** @internal */
+type BinaryCallback = {
+  apply(left: unknown, right: unknown): unknown;
+}["apply"];
 
-/** Kind-prefixed prefix operator declaration understood by {@link op}. */
-export type KindedPrefixOperatorDeclaration<kind extends string = string> =
-  `${OperatorKindLiteral<kind>} | ${PrefixOperatorDeclaration}`;
-
-/** Kind-prefixed infix operator declaration understood by {@link op}. */
-export type KindedInfixOperatorDeclaration<kind extends string = string> =
-  `${OperatorKindLiteral<kind>} | ${InfixOperatorDeclaration}`;
-
+/** @internal */
+type KindLiteral = `'${string}'` | `"${string}"`;
+/** @internal */
+type Kinded<declaration extends string> =
+  | declaration
+  | `${KindLiteral} | ${declaration}`;
 /** Operator declaration understood by {@link op}. */
-export type OperatorDeclaration =
-  | PrefixOperatorDeclaration
-  | InfixOperatorDeclaration
-  | KindedPrefixOperatorDeclaration
-  | KindedInfixOperatorDeclaration;
+export type OperatorDeclaration = Kinded<
+  PrefixOperatorDeclaration | InfixOperatorDeclaration
+>;
 
-/** Kind inferred from a declaration, or a fallback kind when none is embedded. */
-export type OperatorDeclarationKind<
-  declaration extends string,
-  fallback extends string,
-> = declaration extends `'${infer kind}' | ${PrefixOperatorDeclaration}` ? kind
-  : declaration extends `"${infer kind}" | ${PrefixOperatorDeclaration}` ? kind
-  : declaration extends `'${infer kind}' | ${InfixOperatorDeclaration}` ? kind
-  : declaration extends `"${infer kind}" | ${InfixOperatorDeclaration}` ? kind
-  : fallback;
+/** @internal */
+type DeclarationBody<declaration extends string> = declaration extends
+  `${KindLiteral} | ${infer body}` ? body : declaration;
+/** @internal */
+type DeclarationKind<declaration extends string, fallback extends string> =
+  declaration extends `'${infer kind}' | ${string}` ? kind
+    : declaration extends `"${infer kind}" | ${string}` ? kind
+    : fallback;
+/** @internal */
+type DeclarationPrecedence<declaration extends string> =
+  DeclarationBody<declaration> extends
+    `${string} ${infer precedence extends number} ?` ? precedence : never;
+/** @internal */
+type DeclarationDirection<declaration extends string> =
+  DeclarationBody<declaration> extends `infixl ${string}` ? "left"
+    : DeclarationBody<declaration> extends `infixr ${string}` ? "right"
+    : "none";
+/** @internal */
+type DeclaredOperator<declaration extends string, kind extends string, fn> =
+  & {
+    readonly kind: DeclarationKind<declaration, kind>;
+    readonly precedence: DeclarationPrecedence<declaration>;
+    readonly apply: fn;
+  }
+  & (DeclarationBody<declaration> extends PrefixOperatorDeclaration
+    ? { readonly arity: 1 }
+    : {
+      readonly arity: 2;
+      readonly direction: DeclarationDirection<declaration>;
+    });
 
 /** Options for {@link op}. */
-export interface OperatorDeclarationOptions<
-  kind extends string = "operator",
-> {
+export interface OperatorDeclarationOptions<kind extends string = "operator"> {
   /** Category used for narrowing and lookup helpers. */
   readonly kind?: kind;
 }
 
-/** Kind-bound operator declaration helper returned by `op.kind(...)`. */
-export type OperatorDeclarationBuilder<kind extends string> = {
-  <const declaration extends KindedPrefixOperatorDeclaration, value, result>(
-    declaration: declaration,
-    fn: (value: value) => result,
-  ): UnaryOperatorDefinition<
-    OperatorDeclarationKind<declaration, kind>,
-    value,
-    result
-  >;
-  <const declaration extends PrefixOperatorDeclaration, value, result>(
-    declaration: declaration,
-    fn: (value: value) => result,
-  ): UnaryOperatorDefinition<kind, value, result>;
+/** Literal declaration helper. Dynamic declarations use `op.raw`. */
+export interface OperatorDeclarationBuilder<fallback extends string> {
   <
-    const declaration extends KindedInfixOperatorDeclaration,
-    left,
-    right,
-    result,
+    const declaration extends Kinded<PrefixOperatorDeclaration>,
+    fn extends UnaryCallback,
+    const kind extends string = fallback,
   >(
     declaration: declaration,
-    fn: (left: left, right: right) => result,
-  ): BinaryOperatorDefinition<
-    OperatorDeclarationKind<declaration, kind>,
-    left,
-    right,
-    result
-  >;
-  <const declaration extends InfixOperatorDeclaration, left, right, result>(
-    declaration: declaration,
-    fn: (left: left, right: right) => result,
-  ): BinaryOperatorDefinition<kind, left, right, result>;
-  (
-    declaration: string,
-    fn: (...operands: never[]) => unknown,
-  ): OperatorDefinition<kind>;
-};
-
-/** Terp-powered operator declaration helper. */
-export interface OperatorDeclarationFunction {
-  <const declaration extends KindedPrefixOperatorDeclaration, value, result>(
-    declaration: declaration,
-    fn: (value: value) => result,
-  ): UnaryOperatorDefinition<
-    OperatorDeclarationKind<declaration, "operator">,
-    value,
-    result
-  >;
-  <const declaration extends PrefixOperatorDeclaration, value, result>(
-    declaration: declaration,
-    fn: (value: value) => result,
-  ): UnaryOperatorDefinition<"operator", value, result>;
+    fn: fn,
+    options?: OperatorDeclarationOptions<kind>,
+  ): DeclaredOperator<declaration, kind, fn>;
   <
-    const declaration extends PrefixOperatorDeclaration,
-    const kind extends string,
-    value,
-    result,
+    const declaration extends Kinded<InfixOperatorDeclaration>,
+    fn extends BinaryCallback,
+    const kind extends string = fallback,
   >(
     declaration: declaration,
-    fn: (value: value) => result,
-    options: OperatorDeclarationOptions<kind>,
-  ): UnaryOperatorDefinition<kind, value, result>;
-  <
-    const declaration extends KindedPrefixOperatorDeclaration,
-    const kind extends string,
-    value,
-    result,
-  >(
-    declaration: declaration,
-    fn: (value: value) => result,
-    options: OperatorDeclarationOptions<kind>,
-  ): UnaryOperatorDefinition<
-    OperatorDeclarationKind<declaration, kind>,
-    value,
-    result
-  >;
-  <
-    const declaration extends KindedInfixOperatorDeclaration,
-    left,
-    right,
-    result,
-  >(
-    declaration: declaration,
-    fn: (left: left, right: right) => result,
-  ): BinaryOperatorDefinition<
-    OperatorDeclarationKind<declaration, "operator">,
-    left,
-    right,
-    result
-  >;
-  <const declaration extends InfixOperatorDeclaration, left, right, result>(
-    declaration: declaration,
-    fn: (left: left, right: right) => result,
-  ): BinaryOperatorDefinition<"operator", left, right, result>;
-  <
-    const declaration extends InfixOperatorDeclaration,
-    const kind extends string,
-    left,
-    right,
-    result,
-  >(
-    declaration: declaration,
-    fn: (left: left, right: right) => result,
-    options: OperatorDeclarationOptions<kind>,
-  ): BinaryOperatorDefinition<kind, left, right, result>;
-  <
-    const declaration extends KindedInfixOperatorDeclaration,
-    const kind extends string,
-    left,
-    right,
-    result,
-  >(
-    declaration: declaration,
-    fn: (left: left, right: right) => result,
-    options: OperatorDeclarationOptions<kind>,
-  ): BinaryOperatorDefinition<
-    OperatorDeclarationKind<declaration, kind>,
-    left,
-    right,
-    result
-  >;
-  (
-    declaration: string,
-    fn: (...operands: never[]) => unknown,
-  ): OperatorDefinition<"operator">;
-  <const kind extends string>(
-    declaration: string,
-    fn: (...operands: never[]) => unknown,
-    options: OperatorDeclarationOptions<kind>,
-  ): OperatorDefinition<kind>;
-  /** Create a helper that applies one `kind` to every declaration. */
-  kind<const kind extends string>(kind: kind): OperatorDeclarationBuilder<kind>;
+    fn: fn,
+    options?: OperatorDeclarationOptions<kind>,
+  ): DeclaredOperator<declaration, kind, fn>;
 }
 
-type ParsedOperatorDeclaration =
-  | {
-    readonly kind?: string;
-    readonly arity: 1;
-    readonly precedence: number;
-  }
-  | {
-    readonly kind?: string;
-    readonly arity: 2;
-    readonly precedence: number;
-    readonly direction: InfixDirection;
-  };
-
-const declaration_interpreter = interpreter({
-  infix: unary_operator(
-    "operator_declaration",
-    8,
-    (precedence) => infix("none", precedence),
-  ),
-  infixl: unary_operator(
-    "operator_declaration",
-    8,
-    (precedence) => infix("left", precedence),
-  ),
-  infixr: unary_operator(
-    "operator_declaration",
-    8,
-    (precedence) => infix("right", precedence),
-  ),
-  prefix: unary_operator("operator_declaration", 8, (precedence) => ({
-    arity: 1,
-    precedence: as_precedence(precedence),
-  })),
-  "|": {
-    kind: "operator_declaration",
-    precedence: 1,
-    direction: "left",
-    arity: 2,
-    apply(kind: unknown, definition: unknown): ParsedOperatorDeclaration {
-      return {
-        ...as_operator_declaration(definition),
-        kind: as_kind(kind),
-      };
-    },
-  },
-});
-
-/** Create an operator definition from a small fixity declaration DSL. */
-export const op = Object.assign(
-  (
+/** Operator declarations with explicit handling for dynamic input. */
+export interface OperatorDeclarationFunction
+  extends OperatorDeclarationBuilder<"operator"> {
+  /** Parse a dynamic declaration, returning malformed input as a TypeError. */
+  raw(
     declaration: string,
     fn: (...operands: never[]) => unknown,
     options?: OperatorDeclarationOptions<string>,
-  ): OperatorDefinition<string> => {
-    return operator_definition(declaration, options?.kind ?? "operator", fn);
-  },
-  {
-    kind<const kind extends string>(
-      kind: kind,
-    ): OperatorDeclarationBuilder<kind> {
-      return ((declaration: string, fn: (...operands: never[]) => unknown) => {
-        return operator_definition(declaration, kind, fn);
-      }) as OperatorDeclarationBuilder<kind>;
-    },
-  },
-) as OperatorDeclarationFunction;
+  ): OperatorDefinition | TypeError;
+  /** Create a helper that applies one kind to every declaration. */
+  kind<const kind extends string>(kind: kind): OperatorDeclarationBuilder<kind>;
+}
 
-function operator_definition<kind extends string>(
+/** Create an operator definition from a fixity, precedence, and operand marker. */
+export const op = Object.assign(operator_definition, {
+  raw(
+    declaration: string,
+    fn: (...operands: never[]) => unknown,
+    options?: OperatorDeclarationOptions<string>,
+  ): OperatorDefinition | TypeError {
+    try {
+      return operator_definition(declaration, fn, options);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        return error;
+      }
+      throw error;
+    }
+  },
+  kind<const kind extends string>(
+    kind: kind,
+  ): OperatorDeclarationBuilder<kind> {
+    return ((
+      declaration: string,
+      fn: (...operands: never[]) => unknown,
+      options?: OperatorDeclarationOptions<string>,
+    ) => {
+      return operator_definition(declaration, fn, {
+        kind: options?.kind ?? kind,
+      });
+    }) as OperatorDeclarationBuilder<kind>;
+  },
+}) as OperatorDeclarationFunction;
+
+function operator_definition(
   declaration: string,
-  kind: kind,
   fn: (...operands: never[]) => unknown,
-): OperatorDefinition<string> {
-  const parsed = parse_operator_declaration(declaration);
-  const definition_kind = parsed.kind ?? kind;
-
-  switch (parsed.arity) {
-    case 1:
-      return {
-        kind: definition_kind,
-        precedence: parsed.precedence,
-        arity: 1,
-        apply: fn as (value: unknown) => unknown,
-      };
-    case 2:
-      return {
-        kind: definition_kind,
-        precedence: parsed.precedence,
-        direction: parsed.direction,
-        arity: 2,
-        apply: fn as (left: unknown, right: unknown) => unknown,
-      };
-  }
-}
-
-function parse_operator_declaration(
-  declaration: string,
-): ParsedOperatorDeclaration {
-  const expression = declaration_expression(declaration);
-  const runner = declaration_interpreter.raw(expression);
-
-  if (runner instanceof Error) {
-    throw new TypeError(
-      "operator declaration `" + declaration + "` is invalid: " +
-        runner.message,
-    );
-  }
-
-  const parsed = runner();
-
-  if (!is_parsed_operator_declaration(parsed)) {
-    throw new TypeError(
-      "operator declaration `" + declaration +
-        "` must be `prefix`, `infix`, `infixl`, or `infixr` followed by a precedence and `?`",
-    );
-  }
-
-  return parsed;
-}
-
-function declaration_expression(declaration: string): string {
-  const trimmed = declaration.trim();
-  const match = /^(.*)\s\?$/.exec(trimmed);
-
+  options?: OperatorDeclarationOptions<string>,
+): OperatorDefinition {
+  const match = /^(?:(['"])(.*?)\1 \| )?(prefix|infix|infixl|infixr) (\S+) \?$/
+    .exec(declaration);
   if (match === null) {
     throw new TypeError(
-      "operator declaration `" + declaration + "` must end with `?`",
-    );
-  }
-
-  const expression = match[1].trimEnd();
-
-  if (expression.length === 0) {
-    throw new TypeError(
       "operator declaration `" + declaration +
-        "` must include a fixity before `?`",
+        "` is invalid; expected [quoted kind | ]prefix/infix/infixl/infixr precedence ?",
     );
   }
-
-  return expression;
-}
-
-function infix(
-  direction: InfixDirection,
-  precedence: unknown,
-): ParsedOperatorDeclaration {
-  return {
-    arity: 2,
-    precedence: as_precedence(precedence),
-    direction,
-  };
-}
-
-function as_precedence(value: unknown): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
+  const precedence = Number(match[4]);
+  if (!Number.isFinite(precedence)) {
     throw new TypeError(
       "operator declaration precedence must be a finite number",
     );
   }
-
-  return value;
-}
-
-function as_kind(value: unknown): string {
-  if (typeof value !== "string") {
-    throw new TypeError("operator declaration kind must be a string");
+  if (typeof fn !== "function") {
+    throw new TypeError("operator declaration callback must be a function");
   }
-
-  return value;
-}
-
-function as_operator_declaration(value: unknown): ParsedOperatorDeclaration {
-  if (!is_parsed_operator_declaration(value)) {
-    throw new TypeError(
-      "operator declaration right side must be an operator declaration",
-    );
+  const kind = match[2] ?? options?.kind ?? "operator";
+  if (match[3] === "prefix") {
+    return {
+      kind,
+      precedence,
+      arity: 1,
+      apply: fn as (value: unknown) => unknown,
+    };
   }
-
-  return value;
-}
-
-function is_parsed_operator_declaration(
-  value: unknown,
-): value is ParsedOperatorDeclaration {
-  if (typeof value !== "object" || value === null) {
-    return false;
+  let direction: "left" | "right" | "none" = "none";
+  if (match[3] === "infixl") {
+    direction = "left";
   }
-
-  const candidate = value as {
-    readonly kind?: unknown;
-    readonly arity?: unknown;
-    readonly precedence?: unknown;
-    readonly direction?: unknown;
+  if (match[3] === "infixr") {
+    direction = "right";
+  }
+  return {
+    kind,
+    precedence,
+    arity: 2,
+    direction,
+    apply: fn as (left: unknown, right: unknown) => unknown,
   };
-
-  if (
-    candidate.arity !== 1 && candidate.arity !== 2
-  ) {
-    return false;
-  }
-
-  if (typeof candidate.precedence !== "number") {
-    return false;
-  }
-
-  if (candidate.kind !== undefined && typeof candidate.kind !== "string") {
-    return false;
-  }
-
-  if (candidate.arity === 1) {
-    return true;
-  }
-
-  return candidate.direction === "left" ||
-    candidate.direction === "right" ||
-    candidate.direction === "none";
 }

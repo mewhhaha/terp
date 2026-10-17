@@ -1,0 +1,60 @@
+{
+  "version": {
+    "deno": "2.9.7",
+    "v8": "15.0.245.2-rusty",
+    "typescript": "6.0.3"
+  },
+  "target": "x86_64-unknown-linux-gnu",
+  "probes": "mixed matches, misses, word prefixes, and common symbols",
+  "workload_sha256": "eb0ce7e31bdbced0a6b7aab1fd0b9697abf449689dd7a886d6df74c1b0e2e3b3",
+  "cases": [
+    {
+      "tokens": 10,
+      "linear": {
+        "wall_ns": 180.09775272983424,
+        "cpu_ns": 122.8989080662205
+      },
+      "bucketed": {
+        "wall_ns": 261.203983862834,
+        "cpu_ns": 81.83200579290369
+      },
+      "build": {
+        "wall_ns": 1847.0838007380073,
+        "cpu_ns": 1186.4855072463768
+      },
+      "break_even_probes": 29
+    },
+    {
+      "tokens": 100,
+      "linear": {
+        "wall_ns": 2524.695721393037,
+        "cpu_ns": 768.9221556886228
+      },
+      "bucketed": {
+        "wall_ns": 338.11492389146173,
+        "cpu_ns": 143.4787018255578
+      },
+      "build": {
+        "wall_ns": 8923.056551724161,
+        "cpu_ns": 4958.620689655172
+      },
+      "break_even_probes": 8
+    },
+    {
+      "tokens": 1000,
+      "linear": {
+        "wall_ns": 154272.07799999998,
+        "cpu_ns": 6733.513513513513
+      },
+      "bucketed": {
+        "wall_ns": 828.6397516556294,
+        "cpu_ns": 566.6611570247934
+      },
+      "build": {
+        "wall_ns": 396597.13999999897,
+        "cpu_ns": 34933.333333333336
+      },
+      "break_even_probes": 6
+    }
+  ]
+}

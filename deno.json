@@ -1,6 +1,6 @@
 {
   "name": "@mewhhaha/terp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "MIT",
   "exports": {
     ".": "./mod.ts"
@@ -24,14 +24,20 @@
     ]
   },
   "tasks": {
-    "ci": "deno task fmt:check && deno task lint && deno task doc:lint && deno task check && deno task test && deno task examples && deno task publish:dry-run",
-    "check": "deno check mod.ts src/*.test.ts examples/*.ts",
+    "ci": "deno task fmt:check && deno task lint && deno task doc:lint && deno task check && deno task test:ci && deno task examples && deno task types:budget && deno task publish:dry-run",
+    "check": "deno check mod.ts src/*.test.ts examples/*.ts bench/*.ts scripts/*.ts",
     "doc:lint": "deno doc --lint mod.ts",
-    "examples": "deno run examples/pricing_dsl.ts && deno run examples/functions_dsl.ts && deno run examples/bash_like_dsl.ts && deno run examples/rules_engine.ts && deno run examples/json_key_metrics.ts && deno run examples/feature_flags.ts && deno run examples/form_validation.ts && deno run examples/applicative_parser.ts",
+    "examples": "deno run --allow-read=examples,scripts --allow-run=deno scripts/examples.ts",
     "fmt": "deno fmt",
     "fmt:check": "deno fmt --check",
     "lint": "deno lint",
     "publish:dry-run": "deno publish --dry-run --allow-dirty",
-    "test": "deno test"
+    "test": "deno test",
+    "test:ci": "deno test --no-check",
+    "examples:update": "deno run --allow-read=examples,scripts --allow-write=scripts/examples.golden.json --allow-run=deno scripts/examples.ts --update",
+    "bench": "deno run --no-check --allow-read --allow-write --allow-run=git scripts/bench.ts",
+    "types:budget": "deno run --no-check --allow-read --allow-write --allow-run=deno,git scripts/type_bench.ts - bench/type-budget.json 1",
+    "types:bench": "deno run --no-check --allow-read --allow-write --allow-run=deno,git scripts/type_bench.ts",
+    "bench:lookup": "deno run --allow-read --allow-write scripts/lookup_bench.ts"
   }
 }
